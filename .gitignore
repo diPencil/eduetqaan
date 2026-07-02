@@ -26,3 +26,11 @@ coverage/
 # Agents
 .agents/
 **/.agents/
+
+# SQLite / local DBs
+*.sqlite
+*.sqlite3
+*.db
+backend/data/*.sqlite
+backend/data/*.sqlite3
+backend/data/*.db
