@@ -163,6 +163,27 @@ export default function StudentDashboard() {
     }
   }, [activeTab, student, isAuthenticated]);
 
+  // Scroll Reveal Animation logic
+  useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('revealed');
+        }
+      });
+    }, {
+      threshold: 0.1,
+      rootMargin: '0px 0px -40px 0px'
+    });
+
+    const elements = document.querySelectorAll('.scroll-reveal');
+    elements.forEach((el) => observer.observe(el));
+
+    return () => {
+      elements.forEach((el) => observer.unobserve(el));
+    };
+  }, [activeTab, myCourses, homeworks, exams, walletData, pointsData]);
+
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
@@ -614,7 +635,7 @@ export default function StudentDashboard() {
                 </div>
 
                 {/* Section 1: Available Lectures */}
-                <div>
+                <div className="scroll-reveal fade-in-up">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                       <div style={{ width: '4px', height: '26px', background: 'var(--primary)', borderRadius: '2px' }}></div>
@@ -678,7 +699,7 @@ export default function StudentDashboard() {
                 </div>
 
                 {/* Section 2: Recommended/Latest Lectures */}
-                <div>
+                <div className="scroll-reveal fade-in-up" style={{ transitionDelay: '0.1s' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
                     <div style={{ width: '4px', height: '26px', background: 'var(--primary)', borderRadius: '2px' }}></div>
                     <div style={{ textAlign: 'right' }}>
@@ -735,10 +756,14 @@ export default function StudentDashboard() {
                     ));
                   })()}
                   </div>
+                  {/* Mobile-only "View All" button below the slider */}
+                  <button onClick={() => setActiveTab('lectures')} className="mobile-only-btn" style={{ width: '100%', padding: '12px', background: 'rgba(234, 88, 12, 0.08)', color: 'var(--primary)', border: '1px solid rgba(234, 88, 12, 0.2)', borderRadius: '12px', fontWeight: '800', fontSize: '0.95rem', marginTop: '5px', display: 'none', justifyContent: 'center', alignItems: 'center' }}>
+                    شاهد كل المقترحات
+                  </button>
                 </div>
 
                 {/* Section 3: Live Reviews & Prep Lessons */}
-                <div>
+                <div className="scroll-reveal fade-in-up" style={{ transitionDelay: '0.2s' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
                     <div style={{ width: '4px', height: '26px', background: 'var(--primary)', borderRadius: '2px' }}></div>
                     <div style={{ textAlign: 'right' }}>
@@ -1182,7 +1207,7 @@ export default function StudentDashboard() {
                 </div>
 
                 {/* Available Lectures for Class */}
-                <div>
+                <div className="scroll-reveal fade-in-up" style={{ transitionDelay: '0.1s' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '15px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                       <div style={{ width: '4px', height: '24px', background: 'var(--primary)', borderRadius: '2px' }}></div>
@@ -1283,7 +1308,7 @@ export default function StudentDashboard() {
 
             {/* Tab: Homework */}
             {activeTab === 'homework' && (
-              <div>
+              <div className="scroll-reveal fade-in-up">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px' }}>
                   <div style={{ width: '4px', height: '26px', background: 'var(--primary)', borderRadius: '2px' }}></div>
                   <div style={{ textAlign: 'right' }}>
@@ -1330,7 +1355,7 @@ export default function StudentDashboard() {
 
             {/* Tab: Exams */}
             {activeTab === 'exams' && (
-              <div>
+              <div className="scroll-reveal fade-in-up">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px' }}>
                   <div style={{ width: '4px', height: '26px', background: 'var(--primary)', borderRadius: '2px' }}></div>
                   <div style={{ textAlign: 'right' }}>
@@ -1409,7 +1434,7 @@ export default function StudentDashboard() {
               }
 
               return (
-                <div>
+                <div className="scroll-reveal fade-in-up">
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px' }}>
                     <div style={{ width: '4px', height: '26px', background: 'var(--primary)', borderRadius: '2px' }}></div>
                     <div style={{ textAlign: 'right' }}>
@@ -1523,7 +1548,7 @@ export default function StudentDashboard() {
 
             {/* Tab: Wallet */}
             {activeTab === 'wallet' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+              <div className="scroll-reveal fade-in-up" style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }} className="grid-cards">
                   
                   {/* Balance Visual */}
@@ -1626,7 +1651,7 @@ export default function StudentDashboard() {
 
             {/* Tab: Points History */}
             {activeTab === 'points' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+              <div className="scroll-reveal fade-in-up" style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }} className="grid-cards">
                   
                   {/* Points Balance Visual */}
@@ -1722,7 +1747,7 @@ export default function StudentDashboard() {
 
             {/* Tab: QR Attend Code */}
             {activeTab === 'qr' && (
-              <div>
+              <div className="scroll-reveal fade-in-up">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '28px' }}>
                   <div style={{ width: '4px', height: '26px', background: 'var(--primary)', borderRadius: '2px' }}></div>
                   <div style={{ textAlign: 'right' }}>

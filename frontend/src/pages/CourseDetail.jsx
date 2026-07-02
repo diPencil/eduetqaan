@@ -54,6 +54,27 @@ export default function CourseDetail() {
     };
   }, [loading]);
 
+  // Scroll Reveal Animation logic
+  useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('revealed');
+        }
+      });
+    }, {
+      threshold: 0.1,
+      rootMargin: '0px 0px -40px 0px'
+    });
+
+    const elements = document.querySelectorAll('.scroll-reveal');
+    elements.forEach((el) => observer.observe(el));
+
+    return () => {
+      elements.forEach((el) => observer.unobserve(el));
+    };
+  }, [loading, course]);
+
   useEffect(() => {
     window.scrollTo(0, 0);
     async function loadCourseDetails() {
@@ -163,7 +184,7 @@ export default function CourseDetail() {
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '30px 24px 60px' }}>
 
         {/* Course Hero Banner */}
-        <div style={{
+        <div className="scroll-reveal fade-in-up" style={{
           borderRadius: 'var(--radius-lg)',
           overflow: 'hidden',
           background: 'linear-gradient(135deg, rgba(234,88,12,0.08) 0%, rgba(202,138,4,0.04) 100%)',
@@ -220,7 +241,7 @@ export default function CourseDetail() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
 
             {/* Description Card */}
-            <div className="card-clay" style={{ padding: '30px' }}>
+            <div className="card-clay scroll-reveal fade-in-up" style={{ padding: '30px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '18px' }}>
                 <div style={{ width: '4px', height: '24px', background: 'var(--primary)', borderRadius: '2px' }}></div>
                 <h2 style={{ fontSize: '1.2rem', fontWeight: '800', margin: 0 }}>عن هذه الحصة</h2>
@@ -234,7 +255,7 @@ export default function CourseDetail() {
             </div>
 
             {/* Stats Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '16px' }}>
+            <div className="scroll-reveal fade-in-up" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '15px' }}>
               <div className="card-clay" style={{ textAlign: 'center', padding: '20px 16px' }}>
                 <div className="flex-center" style={{
                   width: '48px', height: '48px', borderRadius: '14px',
@@ -283,7 +304,7 @@ export default function CourseDetail() {
             </div>
 
             {/* Features Card */}
-            <div className="card-clay" style={{ padding: '30px' }}>
+            <div className="card-clay scroll-reveal fade-in-up" style={{ padding: '30px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '18px' }}>
                 <div style={{ width: '4px', height: '24px', background: 'var(--secondary)', borderRadius: '2px' }}></div>
                 <h2 style={{ fontSize: '1.2rem', fontWeight: '800', margin: 0 }}>مميزات هذه الحصة</h2>
@@ -311,7 +332,7 @@ export default function CourseDetail() {
             </div>
 
             {/* Teacher Info */}
-            <div className="card-clay" style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div className="card-clay scroll-reveal fade-in-up" style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '16px' }}>
               <div className="flex-center" style={{
                 width: '60px', height: '60px', borderRadius: '50%', flexShrink: 0,
                 background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)',

@@ -102,6 +102,27 @@ export default function Checkout() {
     if (id) load();
   }, [id]);
 
+  // Scroll Reveal Animation logic
+  useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('revealed');
+        }
+      });
+    }, {
+      threshold: 0.1,
+      rootMargin: '0px 0px -40px 0px'
+    });
+
+    const elements = document.querySelectorAll('.scroll-reveal');
+    elements.forEach((el) => observer.observe(el));
+
+    return () => {
+      elements.forEach((el) => observer.unobserve(el));
+    };
+  }, [loading]);
+
   const price = course ? (course.priceCents / 100) : 0;
   const walletBalance = (student?.balanceCents || 0) / 100;
   const canPayWallet = walletBalance >= price;
@@ -338,13 +359,12 @@ export default function Checkout() {
           </div>
         </div>
       )}
-
       {/* Main Content Grid */}
       <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '30px 24px 60px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px', alignItems: 'start' }} className="grid-cards">
 
           {/* RIGHT COLUMN: Payment Methods */}
-          <div className="card-clay" style={{ padding: '28px', order: window.innerWidth < 768 ? 1 : 0 }}>
+          <div className="card-clay scroll-reveal fade-in-up" style={{ padding: '28px', order: window.innerWidth < 768 ? 1 : 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '22px' }}>
               <div style={{ width: '4px', height: '24px', background: 'var(--primary)', borderRadius: '2px' }}></div>
               <h3 style={{ fontSize: '1.15rem', fontWeight: '900', margin: 0 }}>اختر طريقة الدفع</h3>
@@ -563,7 +583,7 @@ export default function Checkout() {
           </div>
 
           {/* LEFT COLUMN: Order Summary */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div className="scroll-reveal fade-in-up" style={{ position: 'sticky', top: '80px', transitionDelay: '0.1s', display: 'flex', flexDirection: 'column', gap: '20px' }}>
             {/* Order Summary Card */}
             <div className="card-clay" style={{ padding: '28px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '22px' }}>
