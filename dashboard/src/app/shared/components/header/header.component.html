@@ -1,0 +1,118 @@
+
+    <header class="h-16 bg-white/80 backdrop-blur-md border-b border-slate-100 flex items-center justify-between px-4 md:px-8 font-sans sticky top-0 z-30 shadow-sm/5">
+      <!-- Left side: Toggle & Breadcrumbs -->
+      <div class="flex items-center gap-4 text-slate-400">
+        <!-- Hamburger Menu (Mobile Only) -->
+        <button 
+          (click)="toggleSidebar()"
+          class="lg:hidden w-10 h-10 flex items-center justify-center bg-slate-50 rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-colors border border-slate-100 cursor-pointer shadow-sm active:scale-95"
+        >
+          <app-icon name="menu" [size]="20"></app-icon>
+        </button>
+
+        <div class="hidden sm:flex items-center gap-4">
+          <h2 class="text-sm font-black text-slate-800 tracking-tight">{{ currentGroupLabel() }}</h2>
+          <app-icon name="chevron-left" [size]="14" class="text-slate-300"></app-icon>
+          <span class="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-100">{{ currentItemLabel() }}</span>
+        </div>
+      </div>
+
+      <!-- Right side: Quick Actions & Profile -->
+      <div class="flex items-center gap-4 md:gap-8">
+        <!-- Search (Desktop) -->
+        <div class="relative hidden lg:block group search-container z-50">
+          <input
+            type="text"
+            [(ngModel)]="searchQuery"
+            (input)="onSearchInput()"
+            (focus)="onSearchFocus()"
+            placeholder="ابحث عن صفحة، قسم، ميزة..."
+            class="w-64 xl:w-80 bg-slate-50 border border-slate-200 rounded-2xl py-2 pr-10 pl-4 text-xs font-bold focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:bg-white focus:border-blue-300 transition-all shadow-sm"
+          />
+          <app-icon name="search" [size]="16" class="absolute right-3.5 top-2.5 text-slate-400 group-focus-within:text-blue-500 transition-colors"></app-icon>
+          
+          <!-- Search Dropdown -->
+          <div *ngIf="isSearchOpen() && (searchResults().length > 0 || studentResults().length > 0)" class="absolute top-full mt-2 w-full bg-white border border-slate-100 shadow-2xl rounded-2xl overflow-hidden py-2 animate-in fade-in slide-in-from-top-2 duration-200">
+             
+             <!-- Navigation Results -->
+             <ng-container *ngIf="searchResults().length > 0">
+               <div class="px-4 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50 mb-1">الصفحات والأقسام</div>
+               <button 
+                  *ngFor="let result of searchResults()"
+                  (click)="navigateToResult(result.route)"
+                  class="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 transition-colors text-right group/item"
+               >
+                  <div class="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 group-hover/item:bg-blue-50 group-hover/item:text-blue-600 transition-colors shrink-0">
+                    <app-icon [name]="result.icon" [size]="16"></app-icon>
+                  </div>
+                  <div class="flex flex-col truncate">
+                    <span class="text-xs font-bold text-slate-700 group-hover/item:text-blue-700 transition-colors truncate">{{ result.label }}</span>
+                    <span class="text-[9px] font-bold text-slate-400 truncate">{{ result.group }}</span>
+                  </div>
+               </button>
+             </ng-container>
+
+             <!-- Student Results -->
+             <ng-container *ngIf="studentResults().length > 0">
+               <div class="px-4 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50 mb-1 mt-2">بيانات الطلاب</div>
+               <button 
+                  *ngFor="let student of studentResults()"
+                  (click)="navigateToResult('/students/' + student.id)"
+                  class="w-full flex items-center gap-3 px-4 py-2 hover:bg-slate-50 transition-colors text-right group/item"
+               >
+                  <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 group-hover/item:bg-emerald-50 group-hover/item:text-emerald-600 transition-colors shrink-0">
+                    <app-icon name="user" [size]="16"></app-icon>
+                  </div>
+                  <div class="flex flex-col truncate flex-1">
+                    <span class="text-xs font-bold text-slate-700 group-hover/item:text-emerald-700 transition-colors truncate">{{ student.studentName }}</span>
+                    <span class="text-[9px] font-bold text-slate-400 font-mono">{{ student.centerCode || student.studentPhone }}</span>
+                  </div>
+                  <div class="w-5 h-5 rounded-md bg-slate-50 flex items-center justify-center border border-slate-100 text-[9px] text-slate-400 group-hover/item:bg-white">
+                    <app-icon name="chevron-left" [size]="10"></app-icon>
+                  </div>
+               </button>
+             </ng-container>
+
+          </div>
+
+          <div *ngIf="isSearchOpen() && searchResults().length === 0 && studentResults().length === 0 && searchQuery().trim()" class="absolute top-full mt-2 w-full bg-white border border-slate-100 shadow-2xl rounded-2xl p-6 text-center animate-in fade-in slide-in-from-top-2 duration-200">
+             <div class="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3">
+               <app-icon name="search" [size]="20" class="text-slate-300"></app-icon>
+             </div>
+             <p class="text-xs font-bold text-slate-600">لم نجد أي نتيجة</p>
+             <p class="text-[10px] font-medium text-slate-400 mt-1">تأكد من كتابة الاسم أو الكود بشكل صحيح</p>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex items-center gap-2 md:gap-3">
+          <button routerLink="/notifications" (click)="unreadNotifications = 0" class="relative w-10 h-10 flex items-center justify-center bg-slate-50 rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-colors border border-slate-200 cursor-pointer group shadow-sm">
+            <app-icon name="bell" [size]="18" class="text-slate-600 group-hover:text-blue-600 transition-colors"></app-icon>
+            <span *ngIf="unreadNotifications > 0" class="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white text-[10px] font-black flex items-center justify-center border-2 border-white rounded-full shadow-lg">
+              {{ unreadNotifications > 9 ? '+9' : unreadNotifications }}
+            </span>
+            <span *ngIf="unreadNotifications > 0" class="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full animate-ping opacity-75"></span>
+          </button>
+          
+          <button routerLink="/users" class="hidden sm:flex w-10 h-10 items-center justify-center bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors border border-slate-200 cursor-pointer shadow-sm group">
+            <app-icon name="settings" [size]="18" class="text-slate-600 group-hover:rotate-45 transition-transform duration-300"></app-icon>
+          </button>
+        </div>
+
+        <!-- User Profile -->
+        <div class="flex items-center gap-3 md:gap-4 border-r border-slate-200 pr-4 md:pr-8 group cursor-pointer">
+          <div class="hidden sm:block text-left">
+            <p class="text-[11px] font-black text-slate-800 group-hover:text-blue-600 transition-colors leading-none mb-1 text-right">
+              {{ (currentUser()?.email?.split('@') || [])[0] || 'المبدع' }}
+            </p>
+            <p class="text-[9px] font-black text-slate-500 tracking-wider">
+              {{ currentUser()?.role === 'admin' ? 'مدير نظام' : 'محاضر' }}
+            </p>
+          </div>
+          <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black text-lg shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform ring-4 ring-blue-50">
+             {{ (currentUser()?.email || 'M')[0].toUpperCase() }}
+          </div>
+        </div>
+      </div>
+    </header>
+  

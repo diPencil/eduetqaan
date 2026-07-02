@@ -1,0 +1,114 @@
+
+    <div class="space-y-6 font-sans pb-20" dir="rtl">
+      <!-- Header -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 class="text-2xl font-black text-slate-800 tracking-tight italic">بنك أسئلة المذاكرة الذاتية</h1>
+          <p class="text-slate-500 mt-1 font-medium">تنظيم المحتوى إلى فصول تعليمية وإدارة بنك الأسئلة الملحق بها.</p>
+        </div>
+        <button (click)="showAddModal.set(true)" class="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-black shadow-lg shadow-indigo-500/20 hover:bg-indigo-700 transition-all flex items-center gap-2">
+          <span>📂</span> إضافة فصل جديد
+        </button>
+      </div>
+
+      <!-- Filters & Stats -->
+      <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div class="lg:col-span-3 bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 flex flex-wrap items-center gap-4">
+           <div class="flex-1 min-w-[200px]">
+             <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2 mb-1 block">تصفية حسب السنة الدراسية</label>
+             <select [(ngModel)]="gradeFilter" (change)="loadChapters()" 
+                     class="w-full bg-slate-50 border border-slate-100 rounded-2xl px-4 py-3 text-sm font-black text-slate-700 outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all">
+                <option value="all">كل المراحل</option>
+                <option value="1sec">الصف الأول الثانوي</option>
+                <option value="2sec">الصف الثاني الثانوي</option>
+                <option value="3sec">الصف الثالث الثانوي</option>
+             </select>
+           </div>
+           
+           <div class="flex-1 min-w-[200px] relative mt-5">
+              <input type="text" placeholder="بحث باسم الفصل..." [(ngModel)]="searchQuery"
+                     class="w-full bg-slate-50 border border-slate-100 rounded-2xl py-3 px-10 text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 outline-none">
+              <span class="absolute right-3 top-1/2 -translate-y-1/2 grayscale opacity-40">🔍</span>
+           </div>
+        </div>
+
+        <div class="bg-indigo-600 p-8 rounded-[2.5rem] shadow-xl shadow-indigo-500/20 text-white relative overflow-hidden group">
+           <div class="relative z-10">
+              <p class="text-indigo-100 text-[10px] font-black uppercase mb-1">إجمالي الفصول</p>
+              <h2 class="text-3xl font-black">{{ filteredChapters().length }}</h2>
+           </div>
+           <div class="absolute -right-4 -bottom-4 text-white/10 text-7xl font-black rotate-12 group-hover:rotate-0 transition-transform">📚</div>
+        </div>
+      </div>
+
+      <!-- Chapters Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div *ngFor="let chapter of filteredChapters()" 
+             class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-indigo-500/5 transition-all group overflow-hidden border-b-4"
+             [style.borderBottomColor]="getGradeColor(chapter.gradeLevel)">
+          <div class="p-8">
+             <div class="flex items-center justify-between mb-6">
+                <span class="bg-slate-50 text-slate-400 px-3 py-1 rounded-full text-[10px] font-black border border-slate-100">بند #{{ chapter.orderIndex }}</span>
+                <span class="px-3 py-1 rounded-full text-[10px] font-black border uppercase" 
+                      [style.backgroundColor]="getGradeColor(chapter.gradeLevel) + '10'"
+                      [style.color]="getGradeColor(chapter.gradeLevel)"
+                      [style.borderColor]="getGradeColor(chapter.gradeLevel) + '20'">
+                  {{ chapter.gradeLevel }}
+                </span>
+             </div>
+
+             <h3 class="text-xl font-black text-slate-800 mb-4 h-14 overflow-hidden leading-tight group-hover:text-indigo-600 transition-colors">{{ chapter.title }}</h3>
+             
+             <div class="flex items-center gap-2 pt-4">
+                <a [routerLink]="['/self-quiz', chapter.id]" 
+                   class="flex-1 bg-slate-900 text-white py-4 rounded-2xl text-xs font-black hover:bg-indigo-600 transition-all text-center flex items-center justify-center gap-2">
+                   <span>👁️</span> عرض الأسئلة
+                </a>
+                <button (click)="onDelete(chapter.id)" class="w-12 h-12 flex items-center justify-center bg-red-50 text-red-500 rounded-2xl hover:bg-red-500 hover:text-white transition-all">🗑️</button>
+             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add Chapter Modal -->
+      <div *ngIf="showAddModal()" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-200">
+        <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in duration-200">
+          <div class="px-8 py-6 flex items-center justify-between border-b border-slate-50 bg-slate-50/50">
+            <h3 class="text-xl font-black text-slate-800 italic">إضافة فصل جديد</h3>
+            <button (click)="showAddModal.set(false)" class="w-10 h-10 bg-white text-slate-400 rounded-full flex items-center justify-center hover:bg-red-50 hover:text-red-500 transition-all font-black shadow-sm">✕</button>
+          </div>
+          
+          <div class="p-8 space-y-6">
+            <div class="space-y-4">
+               <div>
+                  <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2 mb-1 block">عنوان الفصل *</label>
+                  <input [(ngModel)]="newChapter.title" type="text" placeholder="مثال: الجغرافيا - الفصل الأول" 
+                         class="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all font-bold">
+               </div>
+               
+               <div class="grid grid-cols-2 gap-4">
+                 <div>
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2 mb-1 block">السنة الدراسية</label>
+                    <select [(ngModel)]="newChapter.gradeLevel" class="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 transition-all font-bold">
+                        <option value="1sec">1 ثانوي</option>
+                        <option value="2sec">2 ثانوي</option>
+                        <option value="3sec">3 ثانوي</option>
+                    </select>
+                 </div>
+                 <div>
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2 mb-1 block">رقم الترتيب</label>
+                    <input [(ngModel)]="newChapter.orderIndex" type="number" 
+                           class="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all font-black">
+                 </div>
+               </div>
+            </div>
+
+            <button (click)="onSaveChapter()" [disabled]="isSaving() || !newChapter.title"
+                    class="w-full py-5 bg-indigo-600 text-white rounded-[2.5rem] font-black shadow-2xl shadow-indigo-100 hover:bg-indigo-700 disabled:opacity-50 transition-all">
+              {{ isSaving() ? 'جاري الحفظ...' : 'تأكيد إضافة الفصل الآن 🚀' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  

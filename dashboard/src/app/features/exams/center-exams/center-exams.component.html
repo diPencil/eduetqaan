@@ -1,0 +1,279 @@
+
+    <div class="max-w-7xl mx-auto p-4 md:p-8 font-sans" dir="rtl">
+      <!-- Header -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+        <div class="flex items-center gap-4">
+          <div class="w-1.5 h-10 bg-blue-600 rounded-full"></div>
+          <div>
+            <h1 class="text-4xl font-black text-slate-900 mb-1 tracking-tight italic">إدارة وتـقـارير امتحانات السنتر</h1>
+            <p class="text-slate-500 font-bold text-sm">تسجيل درجات الامتحانات الورقية، متابعة الأوائل، ورصد الغائبين باحترافية.</p>
+          </div>
+        </div>
+        
+        <div class="flex bg-white p-1.5 rounded-[22px] shadow-xl shadow-slate-200/50 border border-slate-100">
+           <button (click)="activeTab.set('entry')" 
+                   [class]="activeTab() === 'entry' ? 'bg-slate-900 text-white shadow-lg shadow-slate-400/20' : 'text-slate-400 hover:text-slate-600'"
+                   class="px-8 py-3 rounded-[18px] text-sm font-black transition-all">إدخال الدرجات</button>
+           <button (click)="activeTab.set('reports')" 
+                   [class]="activeTab() === 'reports' ? 'bg-slate-900 text-white shadow-lg shadow-slate-400/20' : 'text-slate-400 hover:text-slate-600'"
+                   class="px-8 py-3 rounded-[18px] text-sm font-black transition-all">التقارير والإحصائيات</button>
+        </div>
+      </div>
+
+      <!-- Filters Card -->
+      <div class="bg-white rounded-[40px] shadow-2xl p-8 mb-10 border border-slate-50 relative overflow-hidden group">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-bl-full -mr-16 -mt-16 transition-all group-hover:scale-110"></div>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 relative z-10">
+          <div class="space-y-2">
+            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">السنتر / الفرع</label>
+            <select [(ngModel)]="filters.centerId" class="w-full bg-slate-50 border-none rounded-2xl py-4 px-5 focus:ring-4 focus:ring-indigo-500/10 transition-all font-bold text-slate-700">
+              <option [value]="null">اختر السنتر...</option>
+              <option *ngFor="let c of centers()" [value]="c.id">{{ c.name }}</option>
+            </select>
+          </div>
+
+          <div class="space-y-2">
+            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">المستوى الدراسي</label>
+            <select [(ngModel)]="filters.level" (change)="onLevelChange()" class="w-full bg-slate-50 border-none rounded-2xl py-4 px-5 focus:ring-4 focus:ring-indigo-500/10 transition-all font-bold text-slate-700">
+              <option value="">اختر المستوى...</option>
+              <option value="الصف الاول الثانوي">الصف الأول الثانوي</option>
+              <option value="الصف الثاني الثانوي">الصف الثاني الثانوي</option>
+              <option value="الصف الثالث الثانوي">الصف الثالث الثانوي</option>
+            </select>
+          </div>
+
+          <div class="space-y-2">
+            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">الدورة الدراسية</label>
+            <select [(ngModel)]="filters.courseId" (change)="onCourseChange()" [disabled]="!filters.level" class="w-full bg-slate-50 border-none rounded-2xl py-4 px-5 focus:ring-4 focus:ring-indigo-500/10 transition-all font-bold text-slate-700 disabled:opacity-50">
+              <option [value]="null">اختر الكورس...</option>
+              <option *ngFor="let c of filteredCourses()" [value]="c.id">{{ c.title }}</option>
+            </select>
+          </div>
+
+          <div class="space-y-2">
+            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">المحاضرة / الامتحان</label>
+            <select [(ngModel)]="filters.lessonId" [disabled]="!lessons().length" class="w-full bg-slate-50 border-none rounded-2xl py-4 px-5 focus:ring-4 focus:ring-indigo-500/10 transition-all font-bold text-slate-700 disabled:opacity-50">
+              <option [value]="null">{{ lessons().length ? 'اختر الدرس...' : 'اختر كورس أولاً' }}</option>
+              <option *ngFor="let l of lessons()" [value]="l.id">{{ l.title }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="mt-8 flex justify-center">
+           <button 
+             (click)="loadData()"
+             [disabled]="!filters.centerId || !filters.courseId || !filters.lessonId || isLoading()"
+             class="bg-slate-900 text-white px-10 py-3.5 rounded-2xl font-black shadow-xl shadow-slate-200 hover:bg-blue-600 hover:-translate-y-1 transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:translate-y-0"
+           >
+             <app-icon *ngIf="isLoading()" name="loader" className="animate-spin" [size]="20"></app-icon>
+             <app-icon *ngIf="!isLoading()" name="zap" [size]="20"></app-icon>
+             {{ activeTab() === 'entry' ? 'بدء تسجيل الدرجات' : 'تحديث التقارير والإحصائيات' }}
+           </button>
+        </div>
+      </div>
+
+      <!-- Main Content Tabs -->
+      <div [ngSwitch]="activeTab()">
+        
+        <!-- Tab 1: Score Entry -->
+        <div *ngSwitchCase="'entry'" class="animate-in fade-in slide-in-from-bottom-6 duration-500">
+           <div *ngIf="students().length > 0" class="bg-white rounded-[40px] shadow-2xl border border-slate-50 overflow-hidden">
+              <div class="px-10 py-8 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50/20">
+                 <div>
+                   <h3 class="font-black text-xl text-slate-800">إدخال درجات الطلاب البصرية</h3>
+                   <p class="text-xs text-slate-400 font-bold mt-1">تأكد من إدخال الدرجة القصوى أولاً لتطبيقها على الجميع.</p>
+                 </div>
+                 <div class="flex items-center gap-3">
+                    <div class="flex items-center bg-white border border-slate-200 rounded-2xl p-1 shadow-sm">
+                       <span class="text-[10px] font-black text-slate-400 uppercase px-3">الدرجة الكلية:</span>
+                       <input type="number" [(ngModel)]="globalMaxScore" class="w-16 h-8 text-center bg-slate-50 border-none rounded-xl font-black text-indigo-600 focus:ring-0">
+                       <button (click)="applyGlobalMax()" title="تطبيق على الكل" class="w-8 h-8 flex items-center justify-center text-indigo-500 hover:bg-indigo-50 rounded-xl transition-all">✓</button>
+                    </div>
+                    <input type="text" [(ngModel)]="searchTerm" placeholder="بحث باسم الطالب..." 
+                           class="px-6 py-3 bg-white border border-slate-200 rounded-2xl text-sm font-bold min-w-[250px] outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all">
+                 </div>
+              </div>
+
+              <div class="overflow-x-auto">
+                <table class="w-full text-right">
+                  <thead>
+                    <tr class="bg-slate-50/50">
+                      <th class="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 italic">اسم الطالب</th>
+                      <th class="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 text-center">الدرجة / المجموع</th>
+                      <th class="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 text-center">حالة الحضور</th>
+                      <th class="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">ملاحظات إدارية</th>
+                      <th class="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 text-center">إجراء فردي</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-50 font-bold text-slate-600">
+                    <tr *ngFor="let s of filteredStudents()" class="hover:bg-slate-50/50 transition-colors group">
+                      <td class="px-4 py-3">
+                        <div class="flex items-center gap-3">
+                           <div class="w-9 h-9 bg-indigo-50 text-indigo-500 rounded-lg flex items-center justify-center font-black group-hover:scale-110 transition-transform">{{ s.studentName.charAt(0) }}</div>
+                           <div>
+                             <p class="font-black text-slate-800 text-sm">{{ s.studentName }}</p>
+                             <p class="text-[10px] text-slate-400 tracking-tighter">كود: {{ s.centerCode || 'غير مسجل' }}</p>
+                           </div>
+                        </div>
+                      </td>
+                      <td class="px-4 py-3">
+                        <div class="flex items-center justify-center gap-1.5">
+                           <input type="number" [(ngModel)]="s.examScore" [disabled]="s.examIsAbsent" 
+                                  class="w-14 h-10 text-center bg-slate-50 border-2 border-slate-100 rounded-xl font-black text-indigo-600 focus:border-indigo-500 focus:bg-white outline-none transition-all disabled:opacity-30 disabled:grayscale" placeholder="0">
+                           <span class="text-slate-300 font-black text-lg">/</span>
+                           <input type="number" [(ngModel)]="s.examMaxScore" [disabled]="s.examIsAbsent"
+                                  class="w-14 h-10 text-center bg-slate-50 border-2 border-slate-100 rounded-xl font-black text-slate-500 focus:border-indigo-500 focus:bg-white outline-none transition-all disabled:opacity-30 disabled:grayscale" placeholder="20">
+                        </div>
+                      </td>
+                      <td class="px-4 py-3">
+                        <div class="flex flex-col items-center gap-1">
+                           <label class="flex items-center gap-2 cursor-pointer select-none">
+                              <input type="checkbox" [(ngModel)]="s.examIsAbsent" class="w-4 h-4 rounded-md text-rose-500 focus:ring-rose-200 transition-all border-slate-200">
+                              <span class="text-[11px] font-black" [class.text-rose-500]="s.examIsAbsent">غائب عن الامتحان</span>
+                           </label>
+                           <span *ngIf="s.hasAttendance" class="text-[9px] bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-full font-black border border-emerald-100 uppercase">حضر المحاضرة</span>
+                        </div>
+                      </td>
+                      <td class="px-4 py-3">
+                        <input type="text" [(ngModel)]="s.examNote" placeholder="أضف ملاحظة للطالب..." 
+                               class="w-full bg-slate-50 border-none rounded-xl py-2 px-3 text-xs font-black text-slate-600 focus:ring-4 focus:ring-indigo-500/10 transition-all">
+                      </td>
+                      <td class="px-4 py-3 text-center">
+                         <div class="flex items-center justify-center gap-2">
+                           <button (click)="saveScore(s)" 
+                                   [disabled]="s.isSaving"
+                                   class="w-9 h-9 rounded-lg flex items-center justify-center transition-all bg-indigo-50 text-indigo-600 hover:bg-slate-900 hover:text-white disabled:opacity-30"
+                                   title="حفظ الدرجة">
+                              <app-icon *ngIf="!s.isSaving" name="archive" [size]="16"></app-icon>
+                              <app-icon *ngIf="s.isSaving" name="refresh-cw" [size]="14" className="animate-spin"></app-icon>
+                           </button>
+                           <button (click)="clearScore(s)" 
+                                   [disabled]="s.isSaving || (s.examScore == null && !s.examIsAbsent)"
+                                   class="w-9 h-9 rounded-lg flex items-center justify-center transition-all bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white disabled:opacity-30"
+                                   title="مسح الدرجة">
+                              <app-icon name="trash" [size]="16"></app-icon>
+                           </button>
+                         </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="p-10 bg-slate-900 border-t border-slate-100 flex items-center justify-between">
+                 <div class="text-white/60 text-xs font-black">
+                    سيتم حفظ درجات <span class="text-white text-sm">{{ students().length }}</span> طالب للامتحان المحدد.
+                 </div>
+                  <button (click)="saveBulkScores()" [disabled]="isSaving()" class="bg-blue-600 text-white px-12 py-5 rounded-[26px] font-black shadow-2xl shadow-blue-900/40 hover:bg-slate-800 hover:-translate-y-1 active:translate-y-0 transition-all flex items-center gap-3 disabled:opacity-50 disabled:translate-y-0">
+                    <app-icon *ngIf="isSaving()" name="loader" className="animate-spin" [size]="20"></app-icon>
+                    <app-icon *ngIf="!isSaving()" name="check-circle" [size]="20"></app-icon>
+                    {{ isSaving() ? 'جاري الحفظ...' : 'حفظ الكشف بالكامل الآن' }}
+                  </button>
+              </div>
+           </div>
+        </div>
+
+        <!-- Tab 2: Reports -->
+        <div *ngSwitchCase="'reports'" class="animate-in fade-in slide-in-from-bottom-6 duration-500 space-y-10">
+           
+           <!-- Stats Row -->
+           <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div class="bg-white p-8 rounded-[40px] border border-slate-50 shadow-xl shadow-slate-200/50 flex flex-col items-center text-center">
+                 <div class="w-14 h-14 bg-indigo-50 text-indigo-500 rounded-[22px] flex items-center justify-center mb-4">
+                    <app-icon name="users" [size]="24"></app-icon>
+                 </div>
+                 <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">إجمالي الممتَحنين</p>
+                 <h4 class="text-3xl font-black text-slate-900">{{ stats().totalAttendees || 0 }}</h4>
+              </div>
+              <div class="bg-white p-8 rounded-[40px] border border-slate-50 shadow-xl shadow-slate-200/50 flex flex-col items-center text-center">
+                 <div class="w-14 h-14 bg-rose-50 text-rose-500 rounded-[22px] flex items-center justify-center mb-4">
+                    <app-icon name="user-x" [size]="24"></app-icon>
+                 </div>
+                 <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">إجمالي الغائبين</p>
+                 <h4 class="text-3xl font-black text-rose-600">{{ stats().absentCount || 0 }}</h4>
+              </div>
+              <div class="bg-white p-8 rounded-[40px] border border-slate-50 shadow-xl shadow-slate-200/50 flex flex-col items-center text-center">
+                 <div class="w-14 h-14 bg-amber-50 text-amber-500 rounded-[22px] flex items-center justify-center mb-4">
+                    <app-icon name="target" [size]="24"></app-icon>
+                 </div>
+                 <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">متوسط الدرجات</p>
+                 <h4 class="text-3xl font-black text-amber-600">{{ (stats().avgScore || 0).toFixed(1) }}%</h4>
+              </div>
+              <div class="bg-white p-8 rounded-[40px] border border-slate-50 shadow-xl shadow-slate-200/50 flex flex-col items-center text-center">
+                 <div class="w-14 h-14 bg-emerald-50 text-emerald-500 rounded-[22px] flex items-center justify-center mb-4">
+                    <app-icon name="award" [size]="24"></app-icon>
+                 </div>
+                 <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">أعلى درجة</p>
+                 <h4 class="text-3xl font-black text-emerald-600">{{ stats().maxScore || 0 }}</h4>
+              </div>
+           </div>
+
+           <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <!-- Top Students -->
+              <div class="bg-white rounded-[40px] border border-slate-50 shadow-2xl overflow-hidden">
+                 <div class="p-8 border-b border-slate-50 flex items-center justify-between bg-emerald-50/10">
+                    <h3 class="font-black text-emerald-800 italic flex items-center gap-2">
+                       <app-icon name="award" [size]="20"></app-icon>
+                       أوائل الامتحان
+                    </h3>
+                    <span class="text-[10px] font-black text-emerald-400 uppercase tracking-widest">تلقائي من الدرجات المرصودة</span>
+                 </div>
+                 <div class="p-2">
+                    <div *ngFor="let top of stats().topStudents; let i = index" class="flex items-center justify-between p-4 rounded-3xl hover:bg-emerald-50/50 transition-all border-b border-slate-50 last:border-0 group">
+                       <div class="flex items-center gap-4">
+                          <span class="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center font-black text-xs">{{ i+1 }}</span>
+                          <span class="font-black text-slate-700">{{ top.studentName }}</span>
+                       </div>
+                       <div class="flex items-center gap-2">
+                          <span class="text-xl font-black text-emerald-600">{{ top.score }}</span>
+                          <span class="text-[10px] font-black text-slate-300">/ {{ top.maxScore }}</span>
+                       </div>
+                    </div>
+                    <div *ngIf="!stats().topStudents?.length" class="p-12 text-center text-slate-400 font-bold italic">لا توجد نتائج لعرضها</div>
+                 </div>
+              </div>
+
+              <!-- Absent List -->
+              <div class="bg-white rounded-[40px] border border-slate-50 shadow-2xl overflow-hidden">
+                 <div class="p-8 border-b border-slate-50 flex items-center justify-between bg-rose-50/10">
+                    <h3 class="font-black text-rose-800 italic flex items-center gap-2">
+                       <app-icon name="file-text" [size]="20"></app-icon>
+                       كشف الغائبين
+                    </h3>
+                    <button (click)="exportAbsents()" *ngIf="stats().absents?.length" class="text-rose-500 hover:text-white hover:bg-rose-500 font-black text-xs border border-rose-100 px-3 py-1.5 rounded-xl bg-white transition-all shadow-sm">تصدير القائمة</button>
+                 </div>
+                 <div class="p-2">
+                    <div *ngFor="let abs of stats().absents" class="flex items-center justify-between p-4 rounded-3xl hover:bg-rose-50/50 transition-all border-b border-slate-50 last:border-0">
+                       <div class="flex items-center gap-4">
+                          <span class="w-8 h-8 rounded-full bg-rose-50 text-rose-400 flex items-center justify-center text-xs">✕</span>
+                          <span class="font-black text-slate-700">{{ abs.studentName }}</span>
+                       </div>
+                       <div class="text-left">
+                          <p class="text-[10px] font-black text-slate-400 tracking-tighter">{{ abs.phone || 'بدون هاتف' }}</p>
+                          <p class="text-[9px] font-black text-slate-300 tracking-tighter uppercase italic">{{ abs.parentPhone ? 'ولي أمر: ' + abs.parentPhone : '' }}</p>
+                       </div>
+                    </div>
+                    <div *ngIf="!stats().absents?.length" class="p-12 text-center text-slate-400 font-bold italic">لا يوجد غائبين مسجلين</div>
+                 </div>
+              </div>
+           </div>
+        </div>
+
+        <!-- Empty State (No Load) -->
+         <div *ngSwitchDefault class="py-32 text-center animate-in fade-in duration-700">
+            <div class="w-40 h-40 bg-indigo-50/50 rounded-full shadow-2xl flex items-center justify-center text-indigo-300 mx-auto mb-10 border border-indigo-100/50 animate-bounce cursor-default">
+               <app-icon name="bar-chart-2" [size]="80"></app-icon>
+            </div>
+            <h3 class="text-3xl font-black text-slate-800 mb-4 tracking-tight italic">ابدأ باختيار الفلاتر لعرض البيانات</h3>
+            <p class="text-slate-400 font-bold max-w-sm mx-auto leading-relaxed">قم باختيار السنتر والمحاضرة من الأعلى لعرض كشف تسجيل الدرجات أو الاطلاع على تقارير الأداء.</p>
+         </div>
+
+        <!-- Loading -->
+        <div *ngIf="isLoading()" class="fixed inset-0 z-50 bg-slate-900/10 backdrop-blur-[2px] flex items-center justify-center">
+           <div class="bg-white p-10 rounded-[40px] shadow-2xl flex flex-col items-center gap-6 animate-in zoom-in duration-300">
+              <div class="w-16 h-16 border-[6px] border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+             </div>
+          </div>
+        </div>
+      </div>
+  

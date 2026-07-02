@@ -1,0 +1,328 @@
+
+    <div class="space-y-6 font-sans mb-20" dir="rtl">
+      <!-- Page Header -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 class="text-2xl font-black text-slate-800 tracking-tight italic flex items-center gap-2">
+            <span class="w-1.5 h-8 bg-blue-600 rounded-full"></span>
+            إدارة كروت الشحن (Vouchers)
+          </h1>
+          <p class="text-slate-500 font-bold mt-1 mr-3.5 italic">توليد أكواد شحن المحفظة وتتبع استخدامها وإدارتها يدوياً.</p>
+        </div>
+        <div class="flex flex-wrap gap-3">
+          <button (click)="openExportModal()" class="bg-emerald-50 text-emerald-600 px-6 py-3.5 rounded-2xl font-black flex items-center gap-2 border border-emerald-100/50 hover:bg-emerald-600 hover:text-white transition-all text-[10px] uppercase tracking-widest group">
+            <app-icon name="download" [size]="14" className="transition-transform group-hover:scale-110"></app-icon>
+            تصدير CSV
+          </button>
+          <button (click)="showManualModal = true" class="bg-amber-50 text-amber-600 px-6 py-3.5 rounded-2xl font-black flex items-center gap-2 border border-amber-100/50 hover:bg-amber-500 hover:text-white transition-all text-[10px] uppercase tracking-widest group">
+            <app-icon name="edit-3" [size]="14" className="transition-transform group-hover:scale-110"></app-icon>
+            إضافة يدوي
+          </button>
+          <button (click)="showGenerateModal = true" class="bg-blue-600 text-white px-8 py-3.5 rounded-2xl font-black flex items-center gap-2 shadow-xl shadow-blue-500/20 hover:bg-slate-900 hover:-translate-y-1 transition-all text-[10px] uppercase tracking-widest group">
+             <app-icon name="sparkles" [size]="18" className="transition-transform group-hover:rotate-12 ml-1"></app-icon>
+             توليد تلقائي
+          </button>
+        </div>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div class="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm transition-all hover:border-blue-100 group relative overflow-hidden">
+          <div class="absolute -right-4 -bottom-4 opacity-5 scale-150 rotate-12 transition-transform group-hover:rotate-6">
+            <app-icon name="ticket" [size]="80"></app-icon>
+          </div>
+          <div class="relative z-10 flex items-center gap-5">
+            <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-inner">
+               <app-icon name="files" [size]="28"></app-icon>
+            </div>
+            <div>
+              <p class="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-2 leading-none">إجمالي كروت الشحن</p>
+              <h3 class="text-3xl font-black text-slate-800 tracking-tight">{{ vouchers().length }}</h3>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm transition-all hover:border-rose-100 group relative overflow-hidden">
+          <div class="absolute -right-4 -bottom-4 opacity-5 scale-150 rotate-12 transition-transform group-hover:rotate-6">
+            <app-icon name="x-circle" [size]="80"></app-icon>
+          </div>
+          <div class="relative z-10 flex items-center gap-5">
+            <div class="w-14 h-14 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-inner">
+               <app-icon name="slash" [size]="28"></app-icon>
+            </div>
+            <div>
+              <p class="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-2 leading-none">مستخدمة</p>
+              <h3 class="text-3xl font-black text-rose-500 tracking-tight">{{ usedCount() }}</h3>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm transition-all hover:border-emerald-100 group relative overflow-hidden">
+          <div class="absolute -right-4 -bottom-4 opacity-5 scale-150 rotate-12 transition-transform group-hover:rotate-6">
+            <app-icon name="check-circle" [size]="80"></app-icon>
+          </div>
+          <div class="relative z-10 flex items-center gap-5">
+            <div class="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-inner">
+               <app-icon name="check" [size]="28"></app-icon>
+            </div>
+            <div>
+              <p class="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-2 leading-none">متاحة للشحن</p>
+              <h3 class="text-3xl font-black text-blue-600 tracking-tight">{{ availableCount() }}</h3>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm transition-all hover:border-amber-100 group relative overflow-hidden">
+          <div class="absolute -right-4 -bottom-4 opacity-5 scale-150 rotate-12 transition-transform group-hover:rotate-6">
+            <app-icon name="search" [size]="80"></app-icon>
+          </div>
+          <div class="relative z-10 flex items-center gap-5">
+            <div class="w-14 h-14 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-inner">
+               <app-icon name="filter" [size]="28"></app-icon>
+            </div>
+            <div>
+              <p class="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-2 leading-none">نتائج الفلترة</p>
+              <h3 class="text-3xl font-black text-amber-500 tracking-tight">{{ filteredVouchers().length }}</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Search & Filters -->
+      <div class="bg-white p-4 rounded-[32px] shadow-sm border border-slate-100 flex flex-wrap items-center gap-4">
+        <div class="flex-1 min-w-[200px] relative group">
+          <app-icon name="search" [size]="18" className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-500 transition-colors"></app-icon>
+          <input type="text" [(ngModel)]="searchTerm" placeholder="بحث برقم الكود..." 
+                 class="w-full bg-slate-50 border border-slate-50 rounded-2xl py-4 pr-12 pl-4 font-black text-xs outline-none focus:ring-4 focus:ring-blue-500/5 focus:bg-white transition-all italic text-right" />
+        </div>
+        
+        <select [(ngModel)]="statusFilter" class="bg-slate-50 border border-slate-50 rounded-2xl px-8 py-4 font-black text-xs outline-none focus:ring-4 focus:ring-blue-500/5 focus:bg-white transition-all text-right cursor-pointer appearance-none">
+          <option value="all">جميع الحالات</option>
+          <option value="available">متاحة للشحن</option>
+          <option value="used">مستخدمة مسبقاً</option>
+        </select>
+ 
+        <button (click)="openExportModal()" class="px-5 py-2.5 bg-slate-100 text-slate-700 rounded-2xl text-sm font-black hover:bg-slate-200 transition-colors flex items-center gap-2">
+          <app-icon name="download" [size]="16"></app-icon> تصدير
+        </button>
+        <button (click)="loadVouchers()" class="w-14 h-14 bg-slate-50 text-slate-300 rounded-2xl hover:text-blue-600 hover:bg-blue-50 transition-all flex items-center justify-center border border-slate-50 shadow-sm active:scale-95 group">
+           <app-icon name="refresh-cw" [size]="18" [className]="isLoading() ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'"></app-icon>
+        </button>
+      </div>
+
+      <!-- Vouchers Table -->
+      <div class="bg-white rounded-[48px] shadow-sm border border-slate-100 overflow-hidden">
+        <div class="overflow-x-auto custom-scrollbar">
+          <table class="w-full text-right border-collapse">
+            <thead class="bg-slate-50/80 text-slate-400 text-[10px] font-black uppercase tracking-widest border-b border-slate-100">
+              <tr>
+                <th class="px-8 py-6"># الكود</th>
+                <th class="px-8 py-6 text-center">القيمة</th>
+                <th class="px-8 py-6 text-center">الحالة</th>
+                <th class="px-8 py-6">مستخدم بواسطة</th>
+                <th class="px-8 py-6">تاريخ الإنشاء</th>
+                <th class="px-8 py-6 text-left">الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-50">
+              <tr *ngFor="let v of filteredVouchers()" class="hover:bg-slate-50/50 transition-colors group">
+                <td class="px-8 py-6">
+                  <div class="flex items-center gap-3">
+                    <code class="bg-blue-50 text-blue-600 px-4 py-2 rounded-2xl font-mono font-black text-xs select-all border border-blue-100/50 shadow-sm">{{ v.codeHash }}</code>
+                  </div>
+                </td>
+                <td class="px-8 py-6 text-center">
+                  <div class="flex flex-col items-center">
+                    <span class="font-black text-slate-800 italic">{{ v.amountCents / 100 }} <small class="text-[9px] font-black text-slate-400">EGP</small></span>
+                    <span class="text-[9px] text-slate-300 font-black uppercase tracking-tighter">{{ v.amountCents }} MALIIM</span>
+                  </div>
+                </td>
+                <td class="px-8 py-6 text-center">
+                  <span [ngClass]="v.isUsed || v.status === 'redeemed' ? 'bg-rose-50 text-rose-500 border-rose-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'" 
+                        class="px-4 py-2 rounded-2xl text-[10px] font-black border uppercase tracking-widest shadow-sm">
+                    {{ (v.isUsed || v.status === 'redeemed') ? 'مستخدمة' : 'متاحة' }}
+                  </span>
+                </td>
+                <td class="px-8 py-6">
+                  <div *ngIf="(v.isUsed || v.status === 'redeemed') && v.redeemer" class="flex flex-col">
+                    <span class="font-black text-slate-700 text-xs tracking-tight">{{ v.redeemer.name }}</span>
+                    <span class="text-[9px] text-slate-400 font-black tracking-widest">{{ v.redeemer.phone }}</span>
+                  </div>
+                  <span *ngIf="!(v.isUsed || v.status === 'redeemed')" class="text-slate-200 italic text-[10px] font-black uppercase tracking-widest">- WAITING -</span>
+                </td>
+                <td class="px-8 py-6 text-[10px] text-slate-400 font-black italic uppercase tracking-tighter">{{ v.createdAt | date:'yyyy/MM/dd' }}</td>
+                <td class="px-8 py-6 text-left">
+                  <div class="flex justify-end gap-2 transition-all">
+                    <button (click)="openEditModal(v)" class="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all flex items-center justify-center border border-blue-100 shadow-sm group/edit">
+                      <app-icon name="edit-2" [size]="14" className="transition-transform group-hover/edit:scale-110"></app-icon>
+                    </button>
+                    <button (click)="onDelete(v.id)" class="w-10 h-10 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all flex items-center justify-center border border-rose-100 shadow-sm group/del">
+                      <app-icon name="trash-2" [size]="14" className="transition-transform group-hover/del:scale-110"></app-icon>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          
+          <!-- Empty State -->
+          <div *ngIf="filteredVouchers().length === 0 && !isLoading()" class="py-32 text-center bg-slate-50/30">
+             <div class="w-24 h-24 bg-white rounded-[40px] flex items-center justify-center mx-auto shadow-sm border border-slate-50 mb-6 grayscale opacity-20 transition-transform group-hover:scale-110">
+                <app-icon name="ticket" [size]="48" className="text-slate-300"></app-icon>
+             </div>
+             <p class="text-slate-300 font-black text-xl italic uppercase tracking-[0.2em]">لم يتم العثور على نتائج</p>
+             <p class="text-slate-300 text-[10px] font-bold mt-2 uppercase">حاول تعديل فلاتر البحث أو إضافة أكواد جديدة</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Generate Modal -->
+      <div *ngIf="showGenerateModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-[48px] shadow-2xl max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-500 border border-white/20">
+          <div class="p-10 border-b border-slate-50 bg-slate-50/50 relative overflow-hidden group">
+            <div class="absolute -right-4 -top-4 opacity-5 scale-150 rotate-12 transition-transform group-hover:rotate-6 text-blue-600 font-black italic">GEN</div>
+            <h3 class="text-2xl font-black text-slate-800 italic uppercase tracking-tight flex items-center gap-3">
+               <app-icon name="sparkles" [size]="24" className="text-blue-600"></app-icon>
+               توليد تلقائي
+            </h3>
+            <p class="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] mt-1 mr-9">توليد كميات كبيرة من الأكواد الفريدة</p>
+          </div>
+          <div class="p-10 space-y-8">
+            <div class="space-y-3">
+              <label class="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] mr-4">عدد كروت الشحن</label>
+              <input type="number" [(ngModel)]="genCount" class="w-full bg-slate-50/50 border border-slate-100 rounded-[28px] px-8 py-5 font-black text-lg outline-none focus:ring-8 focus:ring-blue-500/5 transition-all text-center" />
+            </div>
+            <div class="space-y-3">
+              <label class="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] mr-4">قيمة الكود (جنيه)</label>
+              <input type="number" [(ngModel)]="genAmount" class="w-full bg-slate-50/50 border border-slate-100 rounded-[28px] px-8 py-5 font-black text-lg outline-none focus:ring-8 focus:ring-blue-500/5 transition-all text-center" />
+            </div>
+          </div>
+          <div class="p-10 bg-slate-50/50 flex gap-4">
+             <button (click)="showGenerateModal = false" class="flex-1 bg-white text-slate-400 font-black py-5 rounded-[28px] border border-slate-100 hover:bg-slate-100 transition-all text-xs uppercase tracking-widest">إلغاء</button>
+             <button [disabled]="isSaving()" (click)="onGenerate()" class="flex-1 bg-blue-600 text-white font-black py-5 rounded-[28px] hover:bg-blue-700 shadow-2xl shadow-blue-500/30 transition-all text-xs uppercase tracking-[0.2em] disabled:opacity-50">
+                {{ isSaving() ? 'جاري...' : 'بدء التوليد' }}
+             </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Manual Add Modal -->
+      <div *ngIf="showManualModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-[48px] shadow-2xl max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-500 border border-white/20">
+          <div class="p-10 border-b border-slate-50 bg-amber-50/30 relative overflow-hidden group">
+            <div class="absolute -right-4 -top-4 opacity-5 scale-150 rotate-12 transition-transform group-hover:rotate-6 text-amber-600 font-black italic">ADD</div>
+            <h3 class="text-2xl font-black text-slate-800 italic uppercase tracking-tight text-amber-600 flex items-center gap-3">
+               <app-icon name="edit-3" [size]="24" className="text-amber-500"></app-icon>
+               إضافة يدوية
+            </h3>
+            <p class="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] mt-1 mr-9">تخصيص كود محدد وقيمة معينة</p>
+          </div>
+          <div class="p-10 space-y-8">
+            <div class="space-y-3 text-right">
+              <label class="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] mr-4">الكود (مثال: MYCODE123)</label>
+              <input type="text" [(ngModel)]="manualForm.code" placeholder="اتركه فارغاً للتوليد"
+                     class="w-full bg-slate-50/50 border border-slate-100 rounded-[28px] px-8 py-5 font-black text-lg outline-none focus:ring-8 focus:ring-amber-500/5 transition-all text-center italic" />
+            </div>
+            <div class="space-y-3 text-right">
+              <label class="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] mr-4">قيمة الكود (جنيه)</label>
+              <input type="number" [(ngModel)]="manualForm.amount" 
+                     class="w-full bg-slate-50/50 border border-slate-100 rounded-[28px] px-8 py-5 font-black text-lg outline-none focus:ring-8 focus:ring-amber-500/5 transition-all text-center" />
+            </div>
+          </div>
+          <div class="p-10 bg-slate-50/50 flex gap-4">
+             <button (click)="showManualModal = false" class="flex-1 bg-white text-slate-400 font-black py-5 rounded-[28px] border border-slate-100 hover:bg-slate-100 transition-all text-xs uppercase tracking-widest">إلغاء</button>
+             <button [disabled]="isSaving()" (click)="onManualIssue()" class="flex-1 bg-amber-500 text-white font-black py-5 rounded-[28px] hover:bg-amber-600 shadow-2xl shadow-amber-500/30 transition-all text-xs uppercase tracking-[0.2em] disabled:opacity-50">
+                {{ isSaving() ? 'جاري...' : 'حفظ الكود' }}
+             </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Edit Modal -->
+      <div *ngIf="showEditModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-[48px] shadow-2xl max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-500 border border-white/20">
+          <div class="p-10 border-b border-slate-50 bg-blue-50/30 relative overflow-hidden group">
+            <div class="absolute -right-4 -top-4 opacity-5 scale-150 rotate-12 transition-transform group-hover:rotate-6 text-blue-600 font-black italic">EDIT</div>
+            <h3 class="text-2xl font-black text-slate-800 italic uppercase tracking-tight text-blue-600 flex items-center gap-3">
+               <app-icon name="edit-2" [size]="24" className="text-blue-500"></app-icon>
+               تعديل الكود
+            </h3>
+            <p class="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] mt-1 mr-9">{{ selectedVoucher?.codeHash }}</p>
+          </div>
+          <div class="p-10 space-y-8">
+            <div class="space-y-3 text-right">
+              <label class="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] mr-4 text-right">تعديل القيمة (جنيه)</label>
+              <input type="number" [(ngModel)]="editForm.amount" 
+                     class="w-full bg-slate-50/50 border border-slate-100 rounded-[28px] px-8 py-5 font-black text-lg outline-none focus:ring-8 focus:ring-blue-500/5 transition-all text-center" />
+            </div>
+            <div class="space-y-3 text-right">
+              <label class="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] mr-4 text-right">تعديل الحالة</label>
+              <select [(ngModel)]="editForm.status" 
+                      class="w-full bg-slate-50/50 border border-slate-100 rounded-[28px] px-8 py-5 font-black text-lg outline-none focus:ring-8 focus:ring-blue-500/5 transition-all text-center appearance-none cursor-pointer">
+                <option value="issued">متاحة للشحن</option>
+                <option value="redeemed">مستخدمة مسبقاً</option>
+                <option value="expired">منتهية الصلاحية</option>
+                <option value="revoked">ملغاة/محذوفة</option>
+              </select>
+            </div>
+          </div>
+          <div class="p-10 bg-slate-50/50 flex gap-4">
+             <button (click)="showEditModal = false" class="flex-1 bg-white text-slate-400 font-black py-5 rounded-[28px] border border-slate-100 hover:bg-slate-100 transition-all text-xs uppercase tracking-widest">إلغاء</button>
+             <button [disabled]="isSaving()" (click)="onUpdate()" class="flex-1 bg-blue-600 text-white font-black py-5 rounded-[28px] hover:bg-blue-700 shadow-2xl shadow-blue-500/30 transition-all text-xs uppercase tracking-[0.2em] disabled:opacity-50">
+                {{ isSaving() ? 'جاري...' : 'حفظ التعديلات' }}
+             </button>
+          </div>
+        </div>
+      </div>
+    <!-- Export Options Modal -->
+    <div *ngIf="showExportModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-200">
+      <div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in duration-200">
+        <div class="px-6 py-5 flex items-center justify-between border-b border-slate-50 bg-slate-50/50">
+          <h3 class="text-lg font-black text-slate-800 flex items-center gap-2">
+            <app-icon name="download" [size]="20" className="text-blue-500"></app-icon> خيارات التصدير
+          </h3>
+          <button (click)="showExportModal = false" class="text-slate-400 hover:text-slate-600 transition-colors font-bold w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100">✕</button>
+        </div>
+        
+        <div class="p-6 space-y-4">
+          <div class="space-y-3">
+            <label class="flex items-start gap-3 p-4 border rounded-2xl cursor-pointer hover:border-blue-500 hover:bg-blue-50/50 transition-all text-right" [class.border-blue-500]="exportType === 'unused_today'" [class.bg-blue-50]="exportType === 'unused_today'">
+              <input type="radio" [(ngModel)]="exportType" value="unused_today" class="mt-1 w-4 h-4 text-blue-600">
+              <div>
+                <p class="text-sm font-black text-slate-800 leading-tight">أكواد غير مستخدمة (تاريخ اليوم)</p>
+                <p class="text-[10px] text-slate-500 font-bold mt-1">تصدير الأكواد الجديدة التي تم توليدها اليوم فقط للطباعة.</p>
+              </div>
+            </label>
+
+            <label class="flex items-start gap-3 p-4 border rounded-2xl cursor-pointer hover:border-blue-500 hover:bg-blue-50/50 transition-all text-right" [class.border-blue-500]="exportType === 'unused_all'" [class.bg-blue-50]="exportType === 'unused_all'">
+              <input type="radio" [(ngModel)]="exportType" value="unused_all" class="mt-1 w-4 h-4 text-blue-600">
+              <div>
+                <p class="text-sm font-black text-slate-800 leading-tight">جميع الأكواد المتاحة للطباعة</p>
+                <p class="text-[10px] text-slate-500 font-bold mt-1">كل الأكواد التي لم يتم شحنها في أي وقت مضى.</p>
+              </div>
+            </label>
+
+            <label class="flex items-start gap-3 p-4 border rounded-2xl cursor-pointer hover:border-blue-500 hover:bg-blue-50/50 transition-all text-right" [class.border-blue-500]="exportType === 'current'" [class.bg-blue-50]="exportType === 'current'">
+              <input type="radio" [(ngModel)]="exportType" value="current" class="mt-1 w-4 h-4 text-blue-600">
+              <div>
+                <p class="text-sm font-black text-slate-800 leading-tight">المعروضة حالياً بالجدول</p>
+                <p class="text-[10px] text-slate-500 font-bold mt-1">بناءً على الفلترة العلوية ونتائج البحث ({{ filteredVouchers().length }} كود).</p>
+              </div>
+            </label>
+          </div>
+
+          <div class="mt-6 pt-4 border-t border-slate-100 text-right">
+            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">تصفية إضافية بقيمة الكود (اختياري)</label>
+            <select [(ngModel)]="exportValueFilter" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 text-sm font-bold text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all appearance-none cursor-pointer">
+              <option [value]="0">جميع الفئات</option>
+              <option *ngFor="let val of getAvailableValues()" [value]="val">{{ val }} جنيهاً فقط</option>
+            </select>
+          </div>
+
+          <div class="flex gap-3 mt-8">
+            <button (click)="showExportModal = false" class="flex-1 py-4 bg-slate-100 text-slate-500 rounded-2xl font-black hover:bg-slate-200 transition-all">إلغاء</button>
+            <button (click)="executeExport()" class="flex-[2] py-4 bg-emerald-500 text-white rounded-2xl font-black shadow-lg shadow-emerald-500/30 hover:bg-emerald-600 transition-all flex justify-center items-center gap-2">
+              <app-icon name="download" [size]="18"></app-icon> تصدير الملف CSV
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>

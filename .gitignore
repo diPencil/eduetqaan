@@ -1,21 +1,21 @@
 node_modules/
 **/node_modules/
 
-# env
+# Environment files
 .env
 .env.*
 **/.env
 **/.env.*
 !.env.example
 
-# build outputs
+# Build outputs
 dist/
 build/
 .next/
 out/
 coverage/
 
-# logs
+# Logs
 *.log
 
 # OS and editor
@@ -23,5 +23,6 @@ coverage/
 .vscode/
 .idea/
 
-# agents
+# Agents
 .agents/
+**/.agents/

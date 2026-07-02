@@ -1,0 +1,296 @@
+// src/models/games.models.js
+import { DataTypes } from "sequelize";
+
+/**
+ * True / False questions
+ * table: game_true_false_questions
+ */
+export function defineTrueFalseQuestionModel(sequelize) {
+  return sequelize.define(
+    "TrueFalseQuestion",
+    {
+      id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+      text: { type: DataTypes.TEXT, allowNull: false },
+      isTrue: { type: DataTypes.BOOLEAN, allowNull: false },
+
+      level: { type: DataTypes.STRING, allowNull: true },
+      isActive: { type: DataTypes.BOOLEAN, defaultValue: true },
+
+      createdAtLocal: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAtLocal: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+      },
+    },
+    {
+      tableName: "game_true_false_questions",
+      timestamps: false,
+      indexes: [{ fields: ["level"] }, { fields: ["isActive"] }],
+    }
+  );
+}
+
+/**
+ * MCQ Rush questions
+ * table: game_mcq_rush_questions
+ */
+export function defineMcqRushQuestionModel(sequelize) {
+  return sequelize.define(
+    "McqRushQuestion",
+    {
+      id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+      text: { type: DataTypes.TEXT, allowNull: false },
+      options: {
+        type: DataTypes.JSON,
+        allowNull: false,
+        defaultValue: [],
+      },
+      correctIndex: { type: DataTypes.INTEGER, allowNull: false },
+
+      level: { type: DataTypes.STRING, allowNull: true },
+      isActive: { type: DataTypes.BOOLEAN, defaultValue: true },
+
+      createdAtLocal: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAtLocal: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+      },
+    },
+    {
+      tableName: "game_mcq_rush_questions",
+      timestamps: false,
+      indexes: [{ fields: ["level"] }, { fields: ["isActive"] }],
+    }
+  );
+}
+
+/**
+ * Fast Answer questions
+ * table: game_fast_answer_questions
+ */
+export function defineFastAnswerQuestionModel(sequelize) {
+  return sequelize.define(
+    "FastAnswerQuestion",
+    {
+      id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+      text: { type: DataTypes.TEXT, allowNull: false },
+      options: {
+        type: DataTypes.JSON,
+        allowNull: false,
+        defaultValue: [],
+      },
+      correctIndex: { type: DataTypes.INTEGER, allowNull: false },
+
+      level: { type: DataTypes.STRING, allowNull: true },
+      isActive: { type: DataTypes.BOOLEAN, defaultValue: true },
+
+      createdAtLocal: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAtLocal: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+      },
+    },
+    {
+      tableName: "game_fast_answer_questions",
+      timestamps: false,
+      indexes: [{ fields: ["level"] }, { fields: ["isActive"] }],
+    }
+  );
+}
+
+/**
+ * Flip card countries
+ * table: game_flipcard_countries
+ */
+export function defineFlipCardCountryModel(sequelize) {
+  return sequelize.define(
+    "FlipCardCountry",
+    {
+      id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+
+      code: { type: DataTypes.STRING, allowNull: false, unique: true },
+      name: { type: DataTypes.STRING, allowNull: false },
+      flagEmoji: { type: DataTypes.STRING, allowNull: true },
+
+      isActive: { type: DataTypes.BOOLEAN, defaultValue: true },
+
+      createdAtLocal: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAtLocal: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+      },
+    },
+    {
+      tableName: "game_flipcard_countries",
+      timestamps: false,
+      indexes: [{ unique: true, fields: ["code"] }],
+    }
+  );
+}
+
+/**
+ * Flip card questions
+ * table: game_flipcard_questions
+ */
+export function defineFlipCardQuestionModel(sequelize) {
+  return sequelize.define(
+    "FlipCardQuestion",
+    {
+      id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+
+      countryId: { type: DataTypes.INTEGER, allowNull: false },
+
+      text: { type: DataTypes.TEXT, allowNull: false },
+      options: {
+        type: DataTypes.JSON,
+        allowNull: false,
+        defaultValue: [],
+      },
+      correctIndex: { type: DataTypes.INTEGER, allowNull: false },
+
+      level: { type: DataTypes.STRING, allowNull: true },
+      isActive: { type: DataTypes.BOOLEAN, defaultValue: true },
+
+      createdAtLocal: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAtLocal: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+      },
+    },
+    {
+      tableName: "game_flipcard_questions",
+      timestamps: false,
+      indexes: [{ fields: ["countryId"] }, { fields: ["level"] }, { fields: ["isActive"] }],
+    }
+  );
+}
+
+/**
+ * Battle friend questions
+ * table: game_battle_friend_questions
+ */
+export function defineBattleFriendQuestionModel(sequelize) {
+  return sequelize.define(
+    "BattleFriendQuestion",
+    {
+      id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+
+      text: { type: DataTypes.TEXT, allowNull: false },
+      options: {
+        type: DataTypes.JSON,
+        allowNull: false,
+        defaultValue: [],
+      },
+      correctIndex: { type: DataTypes.INTEGER, allowNull: false },
+
+      level: { type: DataTypes.STRING, allowNull: true },
+      isActive: { type: DataTypes.BOOLEAN, defaultValue: true },
+
+      createdAtLocal: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAtLocal: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+      },
+    },
+    {
+      tableName: "game_battle_friend_questions",
+      timestamps: false,
+      indexes: [{ fields: ["level"] }, { fields: ["isActive"] }],
+    }
+  );
+}
+
+/**
+ * Team battle questions
+ * table: game_team_battle_questions
+ */
+export function defineTeamBattleQuestionModel(sequelize) {
+  return sequelize.define(
+    "TeamBattleQuestion",
+    {
+      id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+
+      text: { type: DataTypes.TEXT, allowNull: false },
+      options: {
+        type: DataTypes.JSON,
+        allowNull: false,
+        defaultValue: [],
+      },
+      correctIndex: { type: DataTypes.INTEGER, allowNull: false },
+
+      level: { type: DataTypes.STRING, allowNull: true },
+      isActive: { type: DataTypes.BOOLEAN, defaultValue: true },
+
+      createdAtLocal: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAtLocal: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+      },
+    },
+    {
+      tableName: "game_team_battle_questions",
+      timestamps: false,
+      indexes: [{ fields: ["level"] }, { fields: ["isActive"] }],
+    }
+  );
+}
+
+/**
+ * Game session row
+ * table: game_sessions
+ */
+export function defineGameSessionModel(sequelize) {
+  return sequelize.define(
+    "GameSession",
+    {
+      id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+
+      studentId: { type: DataTypes.INTEGER, allowNull: false },
+      gameKey: { type: DataTypes.STRING, allowNull: false },
+
+      xp: { type: DataTypes.INTEGER, allowNull: false },
+      score: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
+
+      meta: { type: DataTypes.JSON, allowNull: true },
+
+      createdAtLocal: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAtLocal: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+      },
+    },
+    {
+      tableName: "game_sessions",
+      timestamps: false,
+      indexes: [
+        { fields: ["studentId"] },
+        { fields: ["gameKey"] },
+        { fields: ["studentId", "gameKey"] },
+      ],
+    }
+  );
+}

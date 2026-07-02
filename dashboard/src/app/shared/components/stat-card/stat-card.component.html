@@ -1,0 +1,27 @@
+
+    <div class="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm text-right relative overflow-hidden group transition-all"
+         [ngClass]="hoverBorderClass">
+      
+      <!-- Background Icon -->
+      <div class="absolute -right-4 -top-4 text-6xl opacity-20 group-hover:scale-110 transition-transform"
+           [ngClass]="bgTextClass">
+        <app-icon [name]="icon" [size]="64"></app-icon>
+      </div>
+
+      <!-- Content -->
+      <div class="relative z-10">
+        <p class="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] mb-1">{{ label }}</p>
+        
+        <div class="flex items-baseline gap-1">
+          <h3 class="text-3xl font-black tracking-tight" [ngClass]="valueTextClass">{{ value }}</h3>
+          <small *ngIf="suffix" class="text-xs font-bold text-slate-400">{{ suffix }}</small>
+        </div>
+
+        <p *ngIf="subtext" class="text-[10px] text-slate-400 font-bold mt-1 tracking-tighter uppercase italic">
+          {{ subtext }}
+        </p>
+        
+        <ng-content></ng-content>
+      </div>
+    </div>
+  

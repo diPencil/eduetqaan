@@ -1,0 +1,302 @@
+
+    <div class="max-w-7xl mx-auto p-4 md:p-8 font-sans" dir="rtl">
+      <!-- Header -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+        <div>
+          <h1 class="text-2xl font-black text-slate-800 tracking-tight italic flex items-center gap-2">
+            <span class="w-1.5 h-8 bg-blue-600 rounded-full"></span>
+            إدارة الشهادات التقديرية
+          </h1>
+          <p class="text-slate-500 font-bold mt-1 mr-3.5 italic">إصدار الشهادات الرسمية للطلاب المتفوقين وتحميلها بصيغة PDF.</p>
+        </div>
+        
+        <button (click)="openCreateModal()" class="bg-blue-600 text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-blue-600/20 hover:bg-slate-900 hover:-translate-y-1 transition-all flex items-center gap-3 group">
+          <app-icon name="plus-circle" [size]="18" className="transition-transform group-hover:rotate-90"></app-icon>
+          إصدار شهادة تقدير
+        </button>
+      </div>
+
+      <!-- Stats -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+        <div class="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm transition-all hover:border-blue-100 group relative overflow-hidden">
+          <div class="absolute -right-4 -bottom-4 opacity-5 scale-150 rotate-12 transition-transform group-hover:rotate-6">
+            <app-icon name="award" [size]="80"></app-icon>
+          </div>
+          <div class="relative z-10 flex items-center gap-5">
+            <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-inner">
+               <app-icon name="award" [size]="28"></app-icon>
+            </div>
+            <div>
+              <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-2">إجمالي الشهادات</p>
+              <h4 class="text-3xl font-black text-slate-900 tracking-tight">{{ totalCount() }}</h4>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm transition-all hover:border-indigo-100 group relative overflow-hidden">
+          <div class="absolute -right-4 -bottom-4 opacity-5 scale-150 rotate-12 transition-transform group-hover:rotate-6">
+            <app-icon name="clipboard-list" [size]="80"></app-icon>
+          </div>
+          <div class="relative z-10 flex items-center gap-5">
+            <div class="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-inner">
+               <app-icon name="clipboard-list" [size]="28"></app-icon>
+            </div>
+            <div>
+              <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-2">اختبارات</p>
+              <h4 class="text-3xl font-black text-indigo-600 tracking-tight">{{ typeStats().exam }}</h4>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm transition-all hover:border-emerald-100 group relative overflow-hidden">
+          <div class="absolute -right-4 -bottom-4 opacity-5 scale-150 rotate-12 transition-transform group-hover:rotate-6">
+            <app-icon name="book-open" [size]="80"></app-icon>
+          </div>
+          <div class="relative z-10 flex items-center gap-5">
+            <div class="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-inner">
+               <app-icon name="book-open" [size]="28"></app-icon>
+            </div>
+            <div>
+              <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-2">كورسات</p>
+              <h4 class="text-3xl font-black text-emerald-600 tracking-tight">{{ typeStats().course }}</h4>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm transition-all hover:border-rose-100 group relative overflow-hidden">
+          <div class="absolute -right-4 -bottom-4 opacity-5 scale-150 rotate-12 transition-transform group-hover:rotate-6">
+            <app-icon name="star" [size]="80"></app-icon>
+          </div>
+          <div class="relative z-10 flex items-center gap-5">
+            <div class="w-14 h-14 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-inner">
+               <app-icon name="star" [size]="28"></app-icon>
+            </div>
+            <div>
+              <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-2">أخرى</p>
+              <h4 class="text-3xl font-black text-rose-600 tracking-tight">{{ typeStats().other }}</h4>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Search & Filter -->
+      <div class="bg-white p-4 rounded-[32px] shadow-sm border border-slate-100 mb-8 flex flex-wrap items-center gap-4">
+        <div class="flex-1 min-w-[300px] relative group">
+          <input type="text" [(ngModel)]="searchQuery" (input)="onSearchChange()" placeholder="بحث باسم الطالب أو عنوان الشهادة..." class="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 px-12 text-sm font-bold focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all mr-auto">
+          <app-icon name="search" [size]="18" className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-500 transition-colors"></app-icon>
+        </div>
+        
+        <select [(ngModel)]="filterType" (change)="loadCertificates()" class="bg-slate-50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold focus:border-blue-500 outline-none transition-all cursor-pointer">
+          <option value="">جميع أنواع الشهادات</option>
+          <option value="exam">اختبارات تعليمية</option>
+          <option value="course">دورات تدريبية</option>
+          <option value="behavior">سلوك والتزام</option>
+          <option value="other">أنواع أخرى</option>
+        </select>
+        <button (click)="loadCertificates()" class="w-14 h-14 bg-slate-50 text-slate-300 rounded-2xl hover:text-blue-600 hover:bg-blue-50 transition-all flex items-center justify-center border border-slate-100 active:scale-95 group">
+           <app-icon name="refresh-cw" [size]="18" [className]="isLoading() ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'"></app-icon>
+        </button>
+      </div>
+
+      <!-- Certificates Table -->
+      <div class="bg-white rounded-[40px] shadow-2xl border border-slate-50 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-right border-collapse">
+            <thead>
+              <tr class="bg-slate-50/50">
+                <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">الطالب</th>
+                <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">عنوان الشهادة</th>
+                <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">النوع</th>
+                <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">التاريـخ</th>
+                <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-50">
+              <tr *ngFor="let c of certificates()" class="hover:bg-amber-50/30 transition-colors group">
+                <td class="px-8 py-6">
+                  <div class="flex flex-col">
+                    <span class="font-black text-slate-800">{{ c.student?.studentName }}</span>
+                    <span class="text-[10px] font-bold text-slate-400 tracking-tighter">{{ c.student?.centerCode }}</span>
+                  </div>
+                </td>
+                <td class="px-8 py-6">
+                  <div class="flex flex-col">
+                    <span class="font-black text-slate-700 underline decoration-amber-200 decoration-2 underline-offset-4">{{ c.title }}</span>
+                    <span *ngIf="c.score" class="text-[10px] font-black text-emerald-600 mt-1">الدرجة: {{ c.score }} / {{ c.maxScore }}</span>
+                  </div>
+                </td>
+                <td class="px-8 py-6">
+                  <span [class]="getTypeClass(c.type)" class="px-3 py-1 rounded-lg text-[10px] font-black border uppercase">
+                    {{ getTypeText(c.type) }}
+                  </span>
+                </td>
+                <td class="px-8 py-6 text-slate-500 font-bold text-sm">
+                  {{ c.issuedAt | date:'yyyy/MM/dd' }}
+                </td>
+                <td class="px-8 py-6">
+                  <div class="flex items-center gap-2">
+                    <button (click)="previewCertificate(c.id!)" class="w-10 h-10 bg-white border border-slate-100 rounded-xl flex items-center justify-center text-slate-400 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all shadow-sm group/btn" title="معاينة الشهادة">
+                       <app-icon name="eye" [size]="18" className="transition-transform group-hover/btn:scale-110"></app-icon>
+                    </button>
+                    <button (click)="downloadPdf(c.id!)" class="w-10 h-10 bg-white border border-slate-100 rounded-xl flex items-center justify-center text-slate-400 hover:bg-emerald-600 hover:text-white hover:border-emerald-600 transition-all shadow-sm group/btn" title="تحميل PDF">
+                       <app-icon name="download" [size]="18" className="transition-transform group-hover/btn:scale-110"></app-icon>
+                    </button>
+                    <button (click)="openEditModal(c)" class="w-10 h-10 bg-white border border-slate-100 rounded-xl flex items-center justify-center text-slate-400 hover:bg-amber-500 hover:text-white hover:border-amber-500 transition-all shadow-sm group/btn" title="تعديل">
+                       <app-icon name="edit-3" [size]="18" className="transition-transform group-hover/btn:scale-110"></app-icon>
+                    </button>
+                    <button (click)="onDelete(c.id!)" class="w-10 h-10 bg-white border border-slate-100 rounded-xl flex items-center justify-center text-slate-300 hover:text-rose-500 hover:border-rose-100 transition-all shadow-sm group/btn" title="حذف">
+                       <app-icon name="trash-2" [size]="18" className="transition-transform group-hover/btn:scale-110"></app-icon>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- Loading State -->
+              <tr *ngIf="isLoading()">
+                <td colspan="5" class="py-20 text-center">
+                  <div class="inline-block w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
+                </td>
+              </tr>
+
+              <!-- Empty State -->
+              <tr *ngIf="!certificates().length && !isLoading()">
+                <td colspan="5" class="py-32 text-center bg-slate-50/20">
+                   <div class="w-24 h-24 bg-white border border-slate-100 rounded-[40px] flex items-center justify-center mx-auto shadow-sm mb-6 opacity-40">
+                      <app-icon name="award" [size]="48" className="text-slate-300"></app-icon>
+                   </div>
+                   <h3 class="text-xl font-black text-slate-400 italic uppercase tracking-widest">لا توجد شهادات صادرة</h3>
+                   <p class="text-slate-300 font-bold mt-2 uppercase text-[10px] tracking-widest leading-relaxed">ابدأ بتشجيع طلابك وإصدار أول شهادة تفوق اليوم!</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Create/Edit Modal -->
+      <div *ngIf="isModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-300">
+        <div class="bg-white rounded-[40px] shadow-2xl w-full max-w-3xl overflow-hidden animate-in zoom-in slide-in-from-bottom-10 duration-500">
+          <div class="px-10 py-8 border-b border-slate-50 flex items-center justify-between bg-amber-50/30">
+              <h3 class="text-2xl font-black text-slate-800">{{ isEditing ? 'تعديل بيانات الشهادة' : 'إصدار شهادة تقدير جديدة' }}</h3>
+              <button (click)="closeModal()" class="w-10 h-10 bg-white text-slate-400 rounded-full flex items-center justify-center hover:bg-slate-900 hover:text-white transition-all font-black shadow-sm">✕</button>
+            </div>
+
+            <form (ngSubmit)="onSubmit()" class="p-10 space-y-8 max-h-[70vh] overflow-y-auto scrollbar-hide">
+              
+              <!-- Student Search (Only for new) -->
+              <div *ngIf="!isEditing" class="space-y-4 relative group z-50">
+                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2 italic">ابحث عن الطالب</label>
+                
+                <div *ngIf="!selectedStudent" class="relative">
+                  <input type="text" [(ngModel)]="studentSearch" name="studentSearch" (input)="onStudentSearch()" placeholder="اكتب اسم الطالب، رقم الهاتف، أو الكود..." autocomplete="off" class="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 pr-12 pl-6 font-bold text-slate-800 focus:ring-4 focus:ring-blue-500/10 focus:bg-white focus:border-blue-500 transition-all outline-none">
+                  <app-icon name="search" [size]="18" className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-500 transition-colors"></app-icon>
+                </div>
+                
+                <div *ngIf="!selectedStudent && studentResults().length" class="absolute z-50 w-full mt-2 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden max-h-60 overflow-y-auto scrollbar-hide">
+                  <button *ngFor="let s of studentResults()" (click)="selectStudent(s)" type="button" class="w-full text-right p-4 hover:bg-blue-50 flex flex-col gap-2 border-b border-slate-50 last:border-0 group/item transition-colors">
+                    <div class="flex items-center justify-between w-full">
+                      <span class="font-black text-slate-700 group-hover/item:text-blue-600">{{ s.studentName }}</span>
+                      <span class="text-[10px] bg-slate-100 text-slate-500 px-2 py-1 rounded font-bold group-hover/item:bg-blue-600 group-hover/item:text-white transition-colors" dir="ltr">{{ s.centerCode || 'بلا كود' }}</span>
+                    </div>
+                    <div class="flex items-center gap-3 text-[10px] font-bold text-slate-400">
+                      <span class="flex items-center gap-1"><app-icon name="book-open" [size]="12"></app-icon> {{ s.year || 'غير محدد' }}</span>
+                      <span class="flex items-center gap-1"><app-icon name="phone" [size]="12"></app-icon> <span dir="ltr">{{ s.phone || s.studentPhone || 'لا يوجد رقم' }}</span></span>
+                      <span *ngIf="s.centerName" class="flex items-center gap-1"><app-icon name="map-pin" [size]="12"></app-icon> {{ s.centerName }}</span>
+                    </div>
+                  </button>
+                </div>
+
+                <div *ngIf="selectedStudent" class="flex items-center justify-between p-5 bg-blue-50 rounded-2xl border border-blue-100/50">
+                  <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-blue-600 text-white rounded-xl flex items-center justify-center shadow-md">
+                      <app-icon name="user-check" [size]="20"></app-icon>
+                    </div>
+                    <div>
+                      <h4 class="font-black text-blue-900 text-sm mb-1">{{ selectedStudent.studentName }}</h4>
+                      <div class="flex items-center gap-3 text-[10px] font-bold text-blue-600/70">
+                        <span dir="ltr">{{ selectedStudent.centerCode || 'بلا كود' }}</span>
+                        <span>•</span>
+                        <span dir="ltr">{{ selectedStudent.phone || selectedStudent.studentPhone }}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <button type="button" (click)="clearSelectedStudent()" class="text-xs font-black text-blue-600 hover:text-rose-600 bg-white hover:bg-rose-50 px-4 py-2 rounded-lg transition-colors shadow-sm">
+                    تغيير الطالب
+                  </button>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="space-y-4">
+                  <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2 italic">عنوان الشهادة</label>
+                  <input type="text" name="title" [(ngModel)]="form.title" required placeholder="مثال: تفوق في امتحان الشهر" class="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 px-6 font-bold text-slate-800 focus:ring-4 focus:ring-blue-500/10 focus:bg-white focus:border-blue-500 transition-all outline-none">
+                </div>
+                <div class="space-y-4">
+                  <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2 italic">نوع الشهادة</label>
+                  <select name="type" [(ngModel)]="form.type" class="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 px-6 font-bold text-slate-800 focus:ring-4 focus:ring-blue-500/10 focus:bg-white focus:border-blue-500 transition-all outline-none cursor-pointer">
+                    <option value="exam">اختبار تعليمي</option>
+                    <option value="course">دورة تدريبية</option>
+                    <option value="behavior">سلوك والتزام</option>
+                    <option value="other">أخرى</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="space-y-4">
+                  <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2 italic">الدرجة (اختياري)</label>
+                  <input type="number" name="score" [(ngModel)]="form.score" placeholder="مثال: 95" class="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 px-6 font-bold text-slate-800 focus:ring-4 focus:ring-blue-500/10 focus:bg-white focus:border-blue-500 transition-all outline-none">
+                </div>
+                <div class="space-y-4">
+                  <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2 italic">الدرجة النهائية</label>
+                  <input type="number" name="maxScore" [(ngModel)]="form.maxScore" placeholder="مثال: 100" class="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 px-6 font-bold text-slate-800 focus:ring-4 focus:ring-blue-500/10 focus:bg-white focus:border-blue-500 transition-all outline-none">
+                </div>
+              </div>
+
+              <div class="space-y-4">
+                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2 italic">سبب الشهادة / ملاحظات إضافية</label>
+                <textarea name="reason" [(ngModel)]="form.reason" rows="3" placeholder="اكتب مديحاً للطالب أو سبب التميز..." class="w-full bg-slate-50 border border-slate-100 rounded-[32px] py-4 px-6 font-bold text-slate-800 focus:ring-4 focus:ring-blue-500/10 focus:bg-white focus:border-blue-500 transition-all outline-none resize-none"></textarea>
+              </div>
+
+              <div class="flex items-center justify-end gap-4 pt-8 border-t border-slate-50">
+                <button type="button" (click)="closeModal()" class="px-8 py-4 rounded-2xl font-black text-slate-400 hover:bg-slate-50 transition-all">إلغاء</button>
+                <button type="submit" [disabled]="isSaving || (!isEditing && !selectedStudent)" class="bg-blue-600 text-white px-12 py-4 rounded-3xl font-black shadow-xl shadow-blue-600/20 hover:bg-slate-900 transition-all disabled:opacity-50 flex items-center gap-2">
+                   <app-icon *ngIf="isSaving" name="refresh-cw" [size]="18" className="animate-spin"></app-icon>
+                   {{ isEditing ? 'تحديث البيانات' : 'إصدار الشهادة الآن' }}
+                </button>
+              </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Alert Modal -->
+      <div *ngIf="isAlertOpen" class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden text-center p-8 animate-in zoom-in-95 duration-300">
+          <div class="w-16 h-16 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-4">
+             <app-icon name="alert-triangle" [size]="32"></app-icon>
+          </div>
+          <h3 class="text-lg font-black text-slate-800 mb-2">تنبيه</h3>
+          <p class="text-sm font-bold text-slate-500 mb-6">{{ alertMessage }}</p>
+          <button (click)="closeAlert()" class="w-full bg-slate-900 text-white py-3 rounded-xl font-black shadow-lg shadow-slate-900/20 hover:bg-slate-800 transition-all">
+            حسناً
+          </button>
+        </div>
+      </div>
+
+      <!-- Confirm Modal -->
+      <div *ngIf="isConfirmOpen" class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden text-center p-8 animate-in zoom-in-95 duration-300">
+          <div class="w-16 h-16 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-4">
+             <app-icon name="trash-2" [size]="32"></app-icon>
+          </div>
+          <h3 class="text-xl font-black text-slate-800 mb-2">تأكيد الإجراء</h3>
+          <p class="text-sm font-bold text-slate-500 mb-8">{{ confirmMessage }}</p>
+          <div class="flex items-center gap-4">
+            <button (click)="closeConfirm()" class="flex-1 bg-slate-50 text-slate-500 py-3 rounded-xl font-black hover:bg-slate-100 transition-all">
+              إلغاء
+            </button>
+            <button (click)="executeConfirm()" class="flex-1 bg-rose-600 text-white py-3 rounded-xl font-black shadow-lg shadow-rose-600/20 hover:bg-rose-700 transition-all">
+              نعم، تأكيد
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>

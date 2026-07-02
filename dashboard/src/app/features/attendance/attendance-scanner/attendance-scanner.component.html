@@ -1,0 +1,361 @@
+<div class="max-w-7xl mx-auto p-4 md:p-6 font-sans mb-20" dir="rtl">
+  
+  <!-- Tabs Header -->
+  <div class="flex flex-wrap items-center justify-center sm:justify-start gap-4 mb-10 bg-white p-3 rounded-[1.5rem] shadow-sm border border-slate-100 w-full sm:w-fit">
+    <button (click)="switchToActive()" 
+            [class]="viewMode() === 'active' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'text-slate-500 hover:bg-slate-50'"
+            class="flex-1 sm:flex-none px-8 py-4 rounded-2xl font-black text-sm transition-all flex items-center justify-center gap-3">
+      <app-icon name="rss" [size]="18"></app-icon> الجلسة الحالية
+    </button>
+    <button (click)="switchToHistory()" 
+            [class]="viewMode() === 'history' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'text-slate-500 hover:bg-slate-50'"
+            class="flex-1 sm:flex-none px-8 py-4 rounded-2xl font-black text-sm transition-all flex items-center justify-center gap-3">
+      <app-icon name="file-text" [size]="18"></app-icon> السجلات السابقة
+    </button>
+  </div>
+
+  <!-- VIEW: ACTIVE SESSION -->
+  <div *ngIf="viewMode() === 'active'" class="space-y-6">
+    
+    <!-- Session Setup -->
+    <div *ngIf="!currentSession()" class="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div class="p-6 md:p-8 bg-gradient-to-br from-indigo-600 to-blue-700 text-white">
+        <h2 class="text-2xl md:text-3xl font-black mb-2">تسجيل حضور السنتر</h2>
+        <p class="text-indigo-100 opacity-80 font-bold text-sm md:text-base">اختر التفاصيل لبدء جلسة الحضور السريع لهذا اليوم.</p>
+      </div>
+      
+      <div class="p-6 md:p-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="space-y-2">
+          <label class="text-sm font-black text-slate-700">السنتر / الفرع</label>
+          <select [(ngModel)]="setup.centerId" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-indigo-500 transition-all font-bold">
+            <option [value]="null">اختر السنتر...</option>
+            <option *ngFor="let c of centers()" [value]="c.id">{{ c.name }}</option>
+          </select>
+        </div>
+
+        <div class="space-y-2">
+          <label class="text-sm font-black text-slate-700">الدورة الدراسية</label>
+          <select [(ngModel)]="setup.courseId" (change)="onCourseChange()" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-indigo-500 transition-all font-bold">
+            <option [value]="null">اختر الكورس...</option>
+            <option *ngFor="let c of courses()" [value]="c.id">{{ c.title }}</option>
+          </select>
+        </div>
+
+        <div class="space-y-2">
+          <label class="text-sm font-black text-slate-700">المحاضرة / الدرس</label>
+          <select [(ngModel)]="setup.lessonId" [disabled]="!availableLessons().length" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-indigo-500 transition-all font-bold disabled:opacity-50">
+            <option [value]="null">{{ availableLessons().length ? 'اختر الدرس...' : 'اختر كورس أولاً' }}</option>
+            <option *ngFor="let l of availableLessons()" [value]="l.id">{{ l.title }}</option>
+          </select>
+        </div>
+
+        <div class="md:col-span-3 pt-6 border-t border-slate-100 flex justify-center">
+          <button 
+            (click)="startSession()"
+            [disabled]="!setup.centerId || !setup.courseId || !setup.lessonId || isStarting()"
+            class="w-full md:w-auto bg-indigo-600 text-white px-8 md:px-12 py-4 rounded-2xl font-black text-base md:text-lg shadow-xl shadow-indigo-500/30 hover:bg-indigo-700 hover:-translate-y-1 active:translate-y-0 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+          >
+            <app-icon *ngIf="isStarting()" name="refresh-cw" [size]="20" className="animate-spin ml-3"></app-icon>
+            بدء جلسة الحضور
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Scanner UI -->
+    <div *ngIf="currentSession()" class="space-y-6 animate-in zoom-in-95 duration-300">
+      <!-- Top Stats & Session Info -->
+      <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div class="lg:col-span-3 bg-white border border-slate-100 rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm">
+          <div class="flex items-center gap-4 text-right">
+            <div class="w-12 h-12 md:w-16 md:h-16 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center">
+              <app-icon name="building" [size]="32"></app-icon>
+            </div>
+            <div>
+              <p class="text-[10px] font-black text-indigo-500 uppercase tracking-widest leading-none mb-1">المحاضرة النشطة</p>
+              <h3 class="font-black text-slate-800 text-lg md:text-xl leading-tight">{{ getCenterName(currentSession()?.centerId) }} - {{ getCourseName(currentSession()?.courseId) }}</h3>
+              <p class="text-[10px] md:text-xs font-bold text-slate-400 mt-1">{{ currentSession()?.sessionDate | date:'fullDate':'':'ar-EG' }}</p>
+            </div>
+          </div>
+          <div class="flex flex-wrap items-center justify-center md:justify-end gap-4 md:gap-6 w-full md:w-auto">
+            <div class="flex flex-col items-center px-4 md:px-6 border-l border-slate-100">
+               <span class="text-[10px] font-black text-slate-400 uppercase">الطلاب</span>
+               <span class="text-xl md:text-2xl font-black text-slate-700">{{ students().length }}</span>
+            </div>
+            <div class="flex flex-col items-center px-4 md:px-6 border-l border-slate-100">
+               <span class="text-[10px] font-black text-emerald-400 uppercase">حاضر</span>
+               <span class="text-xl md:text-2xl font-black text-emerald-600">{{ presentCount() }}</span>
+            </div>
+            <div class="flex flex-col items-center px-4 md:px-6">
+               <span class="text-[10px] font-black text-rose-400 uppercase">غائب</span>
+               <span class="text-xl md:text-2xl font-black text-rose-600">{{ absentCount() }}</span>
+            </div>
+            <button (click)="resetSession()" class="bg-rose-600 text-white px-6 py-3 rounded-xl font-black text-sm hover:bg-rose-700 transition-all shadow-lg shadow-rose-200 flex items-center gap-2" title="إنهاء الجلسة">
+              <app-icon name="square" [size]="18"></app-icon>
+              <span>إنهاء الجلسة</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-gradient-to-br from-indigo-600 to-blue-700 rounded-3xl p-6 text-white flex items-center justify-between shadow-xl shadow-indigo-100">
+          <div class="text-right">
+            <p class="text-[10px] font-black opacity-60 uppercase mb-1 tracking-widest">نسبة الحضور</p>
+            <h4 class="text-4xl font-black">{{ attendanceRate() }}%</h4>
+          </div>
+          <app-icon name="trending-up" [size]="48" className="opacity-20"></app-icon>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Scanner Input Card -->
+        <div class="bg-white rounded-3xl shadow-xl p-10 border border-slate-100 flex flex-col items-center text-center">
+          <div class="w-24 h-24 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mb-8 animate-pulse shadow-inner">
+            <app-icon name="rss" [size]="48"></app-icon>
+          </div>
+          <h2 class="text-3xl font-black text-slate-800 mb-2">امسح كود الطالب</h2>
+          <p class="text-slate-400 mb-10 max-w-sm font-bold">سيتم تسجيل الحضور وفتح المحتوى الأونلاين للطالب فوراً.</p>
+          
+          <div class="w-full max-w-sm relative">
+            <input 
+              #scanInput
+              type="text" 
+              [(ngModel)]="scanCode"
+              (keyup.enter)="onScan()"
+              class="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl py-6 px-6 text-center text-4xl font-black tracking-widest focus:outline-none focus:border-indigo-500 focus:ring-8 focus:ring-indigo-500/5 transition-all shadow-inner"
+              placeholder="000000"
+              autocomplete="off"
+            >
+            <div *ngIf="isScanning()" class="absolute inset-y-0 right-6 flex items-center">
+              <app-icon name="refresh-cw" [size]="20" className="animate-spin text-indigo-600"></app-icon>
+            </div>
+          </div>
+          
+          <!-- Last Result -->
+          <div *ngIf="lastResult()" class="mt-8 w-full max-w-md p-6 rounded-2xl border-2 transition-all duration-500 scale-in-center"
+               [ngClass]="lastResult()?.success ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'">
+            <div class="flex items-center gap-4 text-right">
+              <div class="w-14 h-14 rounded-2xl flex items-center justify-center"
+                   [ngClass]="lastResult()?.success ? 'bg-emerald-200 text-emerald-700' : 'bg-red-200 text-red-700 shadow-sm'">
+                <app-icon [name]="lastResult()?.success ? 'check-circle' : 'x-circle'" [size]="24"></app-icon>
+              </div>
+              <div class="flex-1">
+                <h4 class="font-black text-slate-800 text-lg" *ngIf="lastResult()?.data?.student?.studentName">
+                  {{ lastResult()?.data?.student?.studentName }}
+                  <span *ngIf="lastResult()?.data?.student?.centerId !== currentSession()?.centerId" class="inline-block mr-2 text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full shadow-sm align-middle">طالب تعويض</span>
+                </h4>
+                <p class="text-sm font-bold" [ngClass]="lastResult()?.success ? 'text-emerald-600' : 'text-red-600'">
+                  {{ lastResult()?.message || (lastResult()?.data?.alreadyPresent ? 'تم تسجيل الحضور مسبقاً اليوم' : 'تم تسجيل الحضور بنجاح!') }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Scans List (Mini log) -->
+        <div class="bg-white rounded-3xl shadow-lg p-8 border border-slate-100 overflow-hidden h-full max-h-[500px] flex flex-col">
+          <h4 class="font-black text-slate-800 mb-8 flex items-center gap-3 text-right text-xl">
+            <span class="w-10 h-10 bg-slate-50 text-slate-400 flex items-center justify-center rounded-xl">
+              <app-icon name="clipboard-list" [size]="20"></app-icon>
+            </span> سجل المسح الأخير
+          </h4>
+          <div class="space-y-4 overflow-y-auto flex-1 pr-1 text-right custom-scrollbar">
+             <div *ngFor="let s of scanLog()" class="flex items-center justify-between p-5 bg-slate-50 rounded-2xl border border-slate-100 transition-all hover:bg-white hover:shadow-md animate-in slide-in-from-right duration-300">
+               <div class="flex items-center gap-4">
+                 <span class="w-10 h-10 bg-white text-slate-300 rounded-xl shadow-sm flex items-center justify-center">
+                   <app-icon name="user" [size]="20"></app-icon>
+                 </span>
+                 <div class="text-right">
+                   <p class="font-black text-slate-800 text-base leading-tight">
+                     {{ s.studentName }}
+                     <span *ngIf="s.isCompensation" class="inline-block mr-1 text-[9px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full align-middle" [title]="'من: ' + getCenterName(s.originalCenterId)">تعويض</span>
+                   </p>
+                   <p class="text-xs text-slate-400 font-mono mt-0.5 tracking-wider">{{ s.code }}</p>
+                 </div>
+               </div>
+               <div class="flex flex-col items-end gap-1.5">
+                 <span class="text-[10px] font-black text-emerald-600 bg-emerald-100 px-3 py-1 rounded-full shadow-sm">حاضر {{ s.time }}</span>
+                 <span *ngIf="s.isNew" class="text-[9px] font-black text-indigo-500 bg-white ring-1 ring-indigo-50 px-2 py-0.5 rounded-full animate-pulse flex items-center gap-1">
+                    مفعّل أونلاين <app-icon name="sparkles" [size]="10"></app-icon>
+                  </span>
+               </div>
+             </div>
+             
+             <div *ngIf="!scanLog().length" class="flex flex-col items-center justify-center py-20 text-slate-300 opacity-50 mt-4">
+               <app-icon name="wind" [size]="64" className="mb-4"></app-icon>
+               <p class="font-black italic text-sm">بانتظار أول عملية مسح...</p>
+             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Integrated Roster (All students in lesson) -->
+      <div class="bg-white rounded-[2rem] shadow-xl border border-slate-100 overflow-hidden">
+        <div class="p-8 border-b border-slate-50 flex items-center justify-between flex-wrap gap-6 text-right">
+           <div>
+             <h3 class="font-black text-2xl text-slate-800 flex items-center gap-3">
+               <span class="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center">
+                 <app-icon name="users" [size]="24"></app-icon>
+               </span> كشف المحاضرة والدرجات
+             </h3>
+             <p class="text-xs font-bold text-slate-400 mt-1 mr-13">إدارة الطلاب والدرجات الورقية يدوياً</p>
+           </div>
+           <div class="flex items-center gap-4 flex-1 max-w-md">
+              <div class="relative w-full">
+                <span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg">🔍</span>
+                <input type="text" [(ngModel)]="searchTerm" placeholder="بحث باسم الطالب أو الكود..." 
+                       class="w-full pr-12 pl-5 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-sm font-bold outline-none focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/5 transition-all text-right shadow-inner">
+              </div>
+           </div>
+        </div>
+
+        <div class="overflow-x-auto min-h-[400px]">
+          <table class="w-full text-right border-collapse">
+            <thead>
+              <tr class="bg-slate-50/50">
+                <th class="px-8 py-5 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">الطالب</th>
+                <th class="px-8 py-5 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">الحالة</th>
+                <th class="px-8 py-5 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 text-center">الدرجة</th>
+                <th class="px-8 py-5 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">ملاحظات الحضور</th>
+                <th class="px-8 py-5 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 text-center">إجراء</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let s of filteredStudents()" class="border-b border-slate-50 hover:bg-slate-50/30 transition-all group"
+                  [ngClass]="{'bg-indigo-50/10': s.hasAttendance}">
+                <td class="px-8 py-5">
+                  <div class="flex flex-col text-right">
+                    <span class="font-black text-slate-700 text-base">
+                      {{ s.studentName }}
+                      <span *ngIf="s.isCompensation" class="inline-block mr-2 text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full shadow-sm align-middle" [title]="'من: ' + getCenterName(s.centerId)">طالب تعويض</span>
+                    </span>
+                    <span class="text-[11px] text-slate-400 font-mono mt-1 tracking-wider">{{ s.centerCode }}</span>
+                  </div>
+                </td>
+                <td class="px-8 py-5">
+                  <button (click)="toggleAttendance(s)" 
+                          [disabled]="s.isSaving"
+                          [ngClass]="s.hasAttendance ? 'bg-emerald-50 text-emerald-600 ring-emerald-200' : 'bg-slate-50 text-slate-400 ring-slate-200'"
+                          class="px-5 py-2.5 rounded-xl text-xs font-black uppercase ring-1 transition-all hover:scale-105 active:scale-95 disabled:opacity-50 min-w-[100px] shadow-sm flex items-center justify-center gap-2">
+                    <span>{{ s.hasAttendance ? 'حاضر' : 'غائب' }}</span>
+                    <app-icon [name]="s.hasAttendance ? 'check-circle' : 'x-circle'" [size]="14"></app-icon>
+                    <span *ngIf="s.attendedAt" class="block text-[9px] opacity-70 mt-1 font-mono tracking-tighter">{{ s.attendedAt | date:'HH:mm' }}</span>
+                  </button>
+                </td>
+                <td class="px-8 py-5">
+                   <div class="flex items-center justify-center gap-2" dir="ltr">
+                      <input type="number" [(ngModel)]="s.examScore" 
+                             class="w-16 h-11 text-center bg-slate-50 border-2 border-slate-100 rounded-xl font-black text-indigo-600 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/5 text-base transition-all shadow-inner" placeholder="0">
+                      <span class="text-slate-300 font-black text-xl">/</span>
+                      <input type="number" [(ngModel)]="s.examMaxScore" 
+                             class="w-16 h-11 text-center bg-slate-50 border-2 border-slate-100 rounded-xl font-black text-slate-500 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/5 text-base transition-all shadow-inner" placeholder="20">
+                   </div>
+                </td>
+                <td class="px-8 py-5">
+                   <input type="text" [(ngModel)]="s.note" placeholder="أضف ملاحظة..."
+                          class="w-full bg-slate-50 border-2 border-slate-100 rounded-xl py-3 px-5 text-sm font-bold text-slate-600 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/5 transition-all text-right shadow-inner">
+                </td>
+                <td class="px-8 py-5 text-center">
+                   <button (click)="saveStudentState(s)" 
+                           [disabled]="s.isSaving"
+                           class="px-5 py-3 rounded-xl font-black text-xs transition-all bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-30 shadow-md flex items-center justify-center gap-2 w-full md:w-auto">
+                      <span *ngIf="!s.isSaving">حفظ البيانات</span>
+                      <app-icon *ngIf="s.isSaving" name="refresh-cw" [size]="16" className="animate-spin"></app-icon>
+                   </button>
+                </td>
+              </tr>
+              <tr *ngIf="filteredStudents().length === 0 && !isLoadingStudents()">
+                <td colspan="5" class="py-32 text-center text-slate-300 italic font-bold text-lg opacity-60">لم يتم العثور على طلاب في هذا الكشف...</td>
+              </tr>
+              <tr *ngIf="isLoadingStudents()">
+                 <td colspan="5" class="py-32 text-center bg-slate-50/30">
+                    <div class="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4 shadow-xl shadow-indigo-500/20"></div>
+                    <p class="text-sm font-black text-indigo-600 tracking-widest uppercase animate-pulse">جاري تحميل قائمة الطلاب...</p>
+                 </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- VIEW: HISTORY -->
+  <div *ngIf="viewMode() === 'history'" class="animate-in fade-in slide-in-from-bottom-6 duration-700">
+    <div class="bg-white rounded-[2rem] shadow-xl border border-slate-100 overflow-hidden mt-6">
+      <div class="p-8 border-b border-slate-50 flex items-center justify-between flex-wrap gap-6 text-right bg-gradient-to-r from-slate-50 to-white">
+        <div>
+          <h3 class="font-black text-2xl text-slate-800 flex items-center gap-3">
+            <span class="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center">
+              <app-icon name="file-text" [size]="24"></app-icon>
+            </span> سجل الجلسات السابقة
+          </h3>
+          <p class="text-xs font-bold text-slate-400 mt-1 mr-13">عرض ومراجعة كافة جلسات الحضور التي تمت مسبقاً</p>
+        </div>
+        <button (click)="loadSessions()" class="text-indigo-600 font-black hover:scale-105 active:scale-95 flex items-center gap-3 text-base bg-indigo-50 px-8 py-4 rounded-2xl transition-all shadow-sm border border-indigo-100/50">
+          <app-icon name="refresh-cw" [size]="20"></app-icon> تحديث السجل
+        </button>
+      </div>
+
+      <div class="overflow-x-auto min-h-[500px]">
+        <table class="w-full text-right border-collapse">
+          <thead>
+            <tr class="bg-slate-50/50">
+              <th class="px-8 py-5 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 text-center">التاريخ</th>
+              <th class="px-8 py-5 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">التفاصيل</th>
+              <th class="px-8 py-5 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 text-center">الحالة</th>
+              <th class="px-8 py-5 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 text-center">الإجراء</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let sess of sessions()" class="border-b border-slate-50 hover:bg-slate-50/50 transition-all group">
+              <td class="px-8 py-6 text-center">
+                <div class="flex flex-col items-center">
+                  <span class="font-black text-slate-700 text-lg">{{ sess.sessionDate | date:'dd/MM/yyyy' }}</span>
+                  <span class="text-[10px] text-slate-400 font-bold bg-slate-100 px-2 py-0.5 rounded-full mt-1">{{ sess.startedAt | date:'HH:mm' }}</span>
+                </div>
+              </td>
+              <td class="px-8 py-6">
+                <div class="flex flex-col text-right">
+                  <div class="flex items-center gap-2 mb-1">
+                    <span class="text-[10px] font-black text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded flex items-center gap-1">
+                      <app-icon name="building" [size]="10"></app-icon> {{ sess.center?.name }}
+                    </span>
+                  </div>
+                  <span class="font-black text-slate-700 text-base">{{ sess.course?.title }}</span>
+                  <span class="text-[11px] text-slate-500 font-bold mt-1 opacity-70">📖 محاضرة: {{ sess.lesson?.title }}</span>
+                </div>
+              </td>
+              <td class="px-8 py-6 text-center">
+                <span [class]="sess.status === 'active' ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400'"
+                      class="px-3 py-1.5 rounded-full text-[10px] font-black shadow-sm uppercase tracking-wider border-2 border-white flex items-center gap-2">
+                  {{ sess.status === 'active' ? 'مفتوحة' : 'مغلقة' }}
+                  <app-icon [name]="sess.status === 'active' ? 'unlock' : 'lock'" [size]="12"></app-icon>
+                </span>
+              </td>
+              <td class="px-8 py-6 text-center">
+                <button (click)="viewPastSession(sess)" 
+                        class="bg-indigo-600 text-white px-6 py-2.5 rounded-xl font-black text-xs shadow-lg shadow-indigo-100 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 mx-auto">
+                  <app-icon name="eye" [size]="16"></app-icon> مراجعة الكشف
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="sessions().length === 0 && !isLoadingSessions()">
+              <td colspan="4" class="py-40 text-center text-slate-300 opacity-60">
+                <app-icon name="folder" [size]="64" className="mb-4 mx-auto"></app-icon>
+                <p class="font-black italic text-lg">لا يوجد سجلات حضور سابقة متاحة حالياً...</p>
+              </td>
+            </tr>
+            <tr *ngIf="isLoadingSessions()">
+               <td colspan="4" class="py-40 text-center">
+                  <div class="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                  <p class="text-sm font-black text-indigo-600 animate-pulse">جاري تحميل السجلات...</p>
+               </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>

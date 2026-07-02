@@ -1,0 +1,284 @@
+
+    <div class="space-y-6 font-sans pb-20" dir="rtl">
+      <!-- Header -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+        <div>
+          <h1 class="text-2xl font-black text-slate-800 tracking-tight italic flex items-center gap-2">
+            <span class="w-1.5 h-8 bg-blue-600 rounded-full"></span>
+            إدارة تراخيص الطلاب
+          </h1>
+          <p class="text-slate-500 font-bold mt-1 mr-3.5 italic">متابعة وتجديد اشتراكات الطلاب الفعالة والمنتهية.</p>
+        </div>
+        <button (click)="openAddModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3.5 rounded-2xl font-black text-sm flex items-center gap-3 shadow-lg shadow-blue-500/20 transition-all hover:scale-105 active:scale-95 group">
+          <div class="bg-white/20 p-1.5 rounded-xl group-hover:scale-110 transition-transform">
+            <app-icon name="plus" [size]="16"></app-icon>
+          </div>
+          إضافة اشتراك جديد
+        </button>
+      </div>
+
+      <!-- Filters -->
+      <div class="bg-white p-4 rounded-[32px] shadow-sm border border-slate-100 mb-8 flex flex-wrap items-center gap-4">
+        <div class="flex-1 min-w-[300px] relative group">
+          <input type="text" [(ngModel)]="searchQuery" (input)="filterSubscriptions()" placeholder="بحث باسم الطالب أو الباقة..." class="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 px-12 text-sm font-bold focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all mr-auto">
+          <app-icon name="search" [size]="18" className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-500 transition-colors"></app-icon>
+        </div>
+        
+        <select [(ngModel)]="statusFilter" (change)="filterSubscriptions()" class="bg-slate-50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold focus:border-blue-500 outline-none transition-all cursor-pointer">
+          <option value="all">جميع الحالات</option>
+          <option value="active">نشط</option>
+          <option value="expired">منتهي</option>
+          <option value="pending">قيد الانتظار</option>
+        </select>
+        <button (click)="loadSubscriptions()" class="w-14 h-14 bg-slate-50 text-slate-300 rounded-2xl hover:text-blue-600 hover:bg-blue-50 transition-all flex items-center justify-center border border-slate-100 active:scale-95 group">
+           <app-icon name="refresh-cw" [size]="18" [className]="isLoading() ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'"></app-icon>
+        </button>
+      </div>
+
+      <!-- Subscriptions Table -->
+      <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-right">
+            <thead>
+              <tr class="bg-slate-50/80 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
+                <th class="px-8 py-5"># الترقيم</th>
+                <th class="px-8 py-5">اسم الطالب</th>
+                <th class="px-8 py-5">الباقة المشترك بها</th>
+                <th class="px-8 py-5">تاريخ البداية</th>
+                <th class="px-8 py-5">تاريخ النهاية</th>
+                <th class="px-8 py-5 text-center">الحالة</th>
+                <th class="px-8 py-5 text-left">الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-50 relative">
+              <tr *ngIf="isLoading() && subscriptions().length === 0">
+                 <td colspan="7" class="py-20 text-center">
+                    <app-icon name="loader" [size]="32" className="animate-spin mx-auto text-blue-500 mb-4"></app-icon>
+                    <p class="text-sm font-bold text-slate-400">جاري تحميل البيانات...</p>
+                 </td>
+              </tr>
+              <tr *ngFor="let s of filteredSubscriptions()" class="hover:bg-blue-50/30 transition-colors group">
+                <td class="px-8 py-6 text-xs font-mono text-slate-400 font-bold">#{{ s.id }}</td>
+                <td class="px-8 py-6">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl flex items-center justify-center text-slate-500 font-black shadow-inner">
+                      {{ s.studentName?.charAt(0) || 'S' }}
+                    </div>
+                    <a [routerLink]="['/students', s.studentId]" class="font-black text-slate-800 text-sm hover:text-blue-600 transition-colors cursor-pointer block italic">{{ s.studentName || 'غير معروف' }}</a>
+                  </div>
+                </td>
+                <td class="px-8 py-6">
+                  <span class="bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-lg text-[10px] font-black border border-indigo-100 tracking-tighter shadow-sm inline-block max-w-[150px] truncate" [title]="s.planName || 'باقة محذوفة'">
+                    {{ s.planName || 'باقة محذوفة' }}
+                  </span>
+                </td>
+                <td class="px-8 py-6 text-xs font-bold text-slate-500 font-numbers">{{ s.startAt | date:'yyyy/MM/dd' }}</td>
+                <td class="px-8 py-6 text-xs font-bold font-numbers" [ngClass]="s.status === 'expired' ? 'text-rose-500' : 'text-slate-500'">{{ s.endAt | date:'yyyy/MM/dd' }}</td>
+                <td class="px-8 py-6 text-center">
+                    <span [ngClass]="{
+                      'bg-emerald-50 text-emerald-600 border-emerald-100': s.status === 'active',
+                      'bg-rose-50 text-rose-600 border-rose-100': s.status === 'expired',
+                      'bg-amber-50 text-amber-600 border-amber-100': s.status === 'pending'
+                    }" class="px-4 py-1.5 rounded-full text-[10px] font-black border tracking-tighter shadow-sm">
+                      {{ s.status === 'active' ? 'نشط' : (s.status === 'expired' ? 'منتهي' : 'قيد الانتظار') }}
+                    </span>
+                </td>
+                <td class="px-8 py-6 text-left">
+                  <div class="flex items-center justify-end gap-2">
+                    <button (click)="openEditModal(s)" class="w-10 h-10 bg-white border border-slate-100 rounded-xl flex items-center justify-center text-slate-400 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all shadow-sm group/edit" title="تعديل أو تجديد">
+                      <app-icon name="edit-3" [size]="18" className="transition-transform group-hover/edit:scale-110"></app-icon>
+                    </button>
+                    <button (click)="openDeleteModal(s.id)" class="w-10 h-10 bg-white border border-slate-100 rounded-xl flex items-center justify-center text-slate-400 hover:text-rose-600 hover:border-rose-200 hover:bg-rose-50 transition-all shadow-sm group/del" title="إلغاء الاشتراك">
+                      <app-icon name="trash-2" [size]="18" className="transition-transform group-hover/del:scale-110"></app-icon>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              <tr *ngIf="filteredSubscriptions().length === 0 && !isLoading()">
+                <td colspan="7" class="py-32 text-center bg-slate-50/20">
+                   <div class="w-24 h-24 bg-white border border-slate-100 rounded-[40px] flex items-center justify-center mx-auto shadow-sm mb-6 opacity-40">
+                      <app-icon name="calendar" [size]="48" className="text-slate-300"></app-icon>
+                   </div>
+                   <h3 class="text-xl font-black text-slate-400 italic uppercase tracking-widest">لا توجد اشتراكات مطابقة</h3>
+                   <p class="text-slate-300 font-bold mt-2 uppercase text-[10px] tracking-widest leading-relaxed">جرب البحث بكلمات مختلفة أو تغيير الفلتر.</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Add / Edit Modal -->
+      <div *ngIf="isAddEditModalOpen()" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm animate-in" (click)="closeAddEditModal()"></div>
+        
+        <!-- Modal Content -->
+        <div class="relative bg-white rounded-[2rem] shadow-2xl w-full max-w-lg overflow-hidden animate-in">
+          <!-- Header -->
+          <div class="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <h3 class="text-xl font-black text-slate-800 flex items-center gap-2">
+              <app-icon [name]="isEditMode() ? 'edit-3' : 'plus-circle'" [size]="20" [className]="isEditMode() ? 'text-blue-500' : 'text-emerald-500'"></app-icon>
+              {{ isEditMode() ? 'تعديل أو تجديد الاشتراك' : 'إضافة اشتراك جديد' }}
+            </h3>
+            <button (click)="closeAddEditModal()" class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-rose-500 bg-white border border-slate-100 rounded-xl shadow-sm transition-all hover:rotate-90">
+              <app-icon name="x" [size]="16"></app-icon>
+            </button>
+          </div>
+          
+          <!-- Body -->
+          <form [formGroup]="subForm" (ngSubmit)="saveSubscription()" class="p-8 space-y-5">
+            <!-- Student ID (Only visible in Add Mode) -->
+            <div *ngIf="!isEditMode()" class="relative">
+              <label class="block text-xs font-bold text-slate-500 mb-2">الطالب <span class="text-rose-500">*</span></label>
+              
+              <!-- Selected Student View -->
+              <div *ngIf="selectedStudentDetails()" class="w-full bg-blue-50/50 border border-blue-200 rounded-2xl px-5 py-3 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center font-black">
+                    {{ selectedStudentDetails()!.studentName.charAt(0) }}
+                  </div>
+                  <div>
+                    <p class="text-sm font-black text-slate-800">{{ selectedStudentDetails()!.studentName }}</p>
+                    <p class="text-[10px] font-bold text-slate-400 font-numbers">ID: {{ selectedStudentDetails()!.id }} | {{ selectedStudentDetails()!.studentPhone }}</p>
+                  </div>
+                </div>
+                <button type="button" (click)="clearSelectedStudent()" class="w-8 h-8 bg-white border border-slate-200 text-slate-400 hover:text-rose-500 hover:border-rose-200 rounded-xl flex items-center justify-center transition-all">
+                  <app-icon name="x" [size]="14"></app-icon>
+                </button>
+              </div>
+
+              <!-- Search Input -->
+              <div *ngIf="!selectedStudentDetails()">
+                <div class="relative">
+                  <input type="text" 
+                         [ngModel]="studentSearchQuery()" 
+                         (ngModelChange)="studentSearchQuery.set($event); onStudentSearchInput()"
+                         [ngModelOptions]="{standalone: true}"
+                         placeholder="ابحث بالاسم أو رقم الهاتف..." 
+                         class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 pl-12 text-sm font-bold text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all">
+                  <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                    <app-icon *ngIf="!isSearchingStudent()" name="search" [size]="18"></app-icon>
+                    <app-icon *ngIf="isSearchingStudent()" name="loader" [size]="18" className="animate-spin text-blue-500"></app-icon>
+                  </div>
+                </div>
+
+                <!-- Dropdown Results -->
+                <div *ngIf="studentSearchResults().length > 0" class="absolute z-10 w-full mt-2 bg-white border border-slate-100 rounded-2xl shadow-xl shadow-slate-900/5 max-h-60 overflow-y-auto custom-scrollbar">
+                  <div *ngFor="let s of studentSearchResults()" 
+                       (click)="selectStudent(s)"
+                       class="px-5 py-3 hover:bg-slate-50 border-b border-slate-50 cursor-pointer transition-colors last:border-0 flex items-center gap-3">
+                    <div class="w-8 h-8 bg-slate-100 text-slate-500 rounded-lg flex items-center justify-center font-black text-xs">
+                      {{ s.studentName.charAt(0) }}
+                    </div>
+                    <div>
+                      <p class="text-sm font-black text-slate-800">{{ s.studentName }}</p>
+                      <p class="text-[10px] font-bold text-slate-400 flex gap-2">
+                        <span><app-icon name="phone" [size]="10" className="inline"></app-icon> {{ s.studentPhone }}</span>
+                        <span><app-icon name="map-pin" [size]="10" className="inline"></app-icon> {{ s.centerName || s.centerCode || 'غير محدد' }}</span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <p *ngIf="subForm.get('studentId')?.touched && subForm.get('studentId')?.invalid && !selectedStudentDetails()" class="text-rose-500 text-[10px] font-bold mt-2">يجب اختيار طالب</p>
+            </div>
+            
+            <div *ngIf="isEditMode()" class="bg-slate-50 border border-slate-100 rounded-2xl p-4 flex items-center gap-3 mb-4">
+               <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-slate-400 shadow-sm border border-slate-100">
+                  <app-icon name="user" [size]="20"></app-icon>
+               </div>
+               <div>
+                  <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">الطالب الحالي</p>
+                  <p class="text-sm font-black text-slate-800">{{ selectedStudentDetails()?.studentName }}</p>
+               </div>
+            </div>
+
+            <!-- Plan Selection -->
+            <div>
+              <label class="block text-xs font-bold text-slate-500 mb-2">الباقة <span class="text-rose-500">*</span></label>
+              <select formControlName="planId" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 text-sm font-bold text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all appearance-none cursor-pointer">
+                <option value="" disabled selected>اختر الباقة...</option>
+                <option *ngFor="let p of plans()" [value]="p.id">{{ p.name }} ({{ p.priceCents / 100 }} جنيه)</option>
+              </select>
+              <p *ngIf="subForm.get('planId')?.touched && subForm.get('planId')?.invalid" class="text-rose-500 text-[10px] font-bold mt-1">الباقة مطلوبة</p>
+            </div>
+
+            <!-- Dates -->
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-500 mb-2">تاريخ البداية (اختياري)</label>
+                <input type="date" formControlName="startAt" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 text-sm font-bold text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all font-numbers">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-500 mb-2">تاريخ النهاية (اختياري)</label>
+                <input type="date" formControlName="endAt" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 text-sm font-bold text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all font-numbers">
+              </div>
+            </div>
+            
+            <p class="text-[10px] text-slate-400 font-bold leading-relaxed bg-blue-50/50 p-3 rounded-xl border border-blue-100">
+               إذا تركت التواريخ فارغة، سيقوم النظام بحسابها تلقائياً بناءً على مدة الباقة المختارة ابتداءً من اليوم.
+            </p>
+
+            <!-- Status -->
+            <div>
+              <label class="block text-xs font-bold text-slate-500 mb-2">حالة الاشتراك <span class="text-rose-500">*</span></label>
+              <div class="flex gap-4">
+                <label class="flex-1 relative cursor-pointer group">
+                  <input type="radio" formControlName="status" value="active" class="peer sr-only">
+                  <div class="px-4 py-3 bg-white border-2 border-slate-100 rounded-xl text-center text-xs font-black text-slate-400 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 peer-checked:text-emerald-600 transition-all">نشط</div>
+                </label>
+                <label class="flex-1 relative cursor-pointer group">
+                  <input type="radio" formControlName="status" value="pending" class="peer sr-only">
+                  <div class="px-4 py-3 bg-white border-2 border-slate-100 rounded-xl text-center text-xs font-black text-slate-400 peer-checked:border-amber-500 peer-checked:bg-amber-50 peer-checked:text-amber-600 transition-all">قيد الانتظار</div>
+                </label>
+                <label class="flex-1 relative cursor-pointer group">
+                  <input type="radio" formControlName="status" value="expired" class="peer sr-only">
+                  <div class="px-4 py-3 bg-white border-2 border-slate-100 rounded-xl text-center text-xs font-black text-slate-400 peer-checked:border-rose-500 peer-checked:bg-rose-50 peer-checked:text-rose-600 transition-all">منتهي</div>
+                </label>
+              </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="pt-4 mt-6 flex gap-4">
+              <button type="button" (click)="closeAddEditModal()" class="flex-1 py-4 bg-slate-100 text-slate-500 rounded-2xl font-black hover:bg-slate-200 transition-all">إلغاء</button>
+              <button type="submit" [disabled]="isSubmitting()" class="flex-[2] py-4 bg-blue-600 text-white rounded-2xl font-black shadow-lg shadow-blue-500/30 hover:bg-blue-700 transition-all disabled:opacity-50 flex justify-center items-center gap-2">
+                <app-icon *ngIf="isSubmitting()" name="loader" [size]="18" className="animate-spin"></app-icon>
+                {{ isEditMode() ? 'حفظ التعديلات' : 'إضافة الاشتراك' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Delete Confirmation Modal -->
+      <div *ngIf="isDeleteModalOpen()" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm animate-in" (click)="closeDeleteModal()"></div>
+        <div class="relative bg-white rounded-[2rem] p-8 max-w-sm w-full shadow-2xl text-center animate-in">
+          <div class="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center mx-auto mb-6 relative">
+            <div class="absolute inset-0 bg-rose-100 rounded-full animate-ping opacity-20"></div>
+            <app-icon name="alert-triangle" [size]="32" className="text-rose-500 relative z-10"></app-icon>
+          </div>
+          <h3 class="text-2xl font-black text-slate-800 mb-2">إلغاء الاشتراك؟</h3>
+          <p class="text-slate-500 font-bold mb-8 leading-relaxed">هل أنت متأكد من رغبتك في إلغاء وحذف هذا الاشتراك نهائياً؟ لا يمكن التراجع عن هذا الإجراء.</p>
+          <div class="flex gap-4">
+            <button (click)="closeDeleteModal()" class="flex-1 py-4 bg-slate-100 text-slate-500 rounded-2xl font-black hover:bg-slate-200 transition-all">تراجع</button>
+            <button (click)="confirmDelete()" [disabled]="isSubmitting()" class="flex-1 py-4 bg-rose-600 text-white rounded-2xl font-black shadow-lg shadow-rose-500/30 hover:bg-rose-700 transition-all disabled:opacity-50 flex justify-center items-center gap-2">
+              <app-icon *ngIf="isSubmitting()" name="loader" [size]="18" className="animate-spin"></app-icon>
+              نعم، إلغاء
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Toast Notification -->
+      <div *ngIf="notification().show" 
+           class="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] animate-in flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl border"
+           [ngClass]="notification().type === 'success' ? 'bg-emerald-600 border-emerald-500 text-white shadow-emerald-500/20' : 'bg-rose-600 border-rose-500 text-white shadow-rose-500/20'">
+        <app-icon [name]="notification().type === 'success' ? 'check-circle' : 'alert-circle'" [size]="20"></app-icon>
+        <span class="font-black text-sm">{{ notification().message }}</span>
+      </div>
+
+    </div>
+  

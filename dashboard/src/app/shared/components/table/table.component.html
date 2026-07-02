@@ -1,0 +1,64 @@
+
+    <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+      <!-- Optional Header Content -->
+      <div *ngIf="title || hasHeaderContent" class="px-6 py-5 border-b border-slate-50 flex items-center justify-between flex-wrap gap-4">
+        <h3 *ngIf="title" class="font-black text-xl text-slate-800">{{ title }}</h3>
+        <ng-content select="[table-header]"></ng-content>
+      </div>
+
+      <div class="overflow-x-auto min-h-[300px]">
+        <table class="w-full text-right border-collapse">
+          <thead>
+            <tr class="bg-slate-50/50">
+              <th *ngFor="let col of columns" 
+                  [class.text-center]="col.align === 'center'"
+                  [class.text-left]="col.align === 'left'"
+                  [style.width]="col.width"
+                  class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 whitespace-nowrap">
+                <div class="flex items-center gap-2" [class.justify-center]="col.align === 'center'" [class.cursor-pointer]="col.sortable" (click)="col.sortable && sort.emit(col.key)">
+                  {{ col.label }}
+                  <span *ngIf="col.sortable" class="text-slate-300">↕</span>
+                </div>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <ng-container *ngIf="!loading && data.length > 0">
+              <tr *ngFor="let row of data; let i = index" class="border-b border-slate-50 hover:bg-slate-50/50 transition-colors group">
+                <ng-container *ngTemplateOutlet="rowTemplate; context: { $implicit: row, index: i }"></ng-container>
+              </tr>
+            </ng-container>
+
+            <!-- Loading State -->
+            <tr *ngIf="loading">
+              <td [attr.colspan]="columns.length" class="py-20 text-center">
+                <div class="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <p class="font-black text-indigo-600 animate-pulse text-sm">جاري التحميل...</p>
+              </td>
+            </tr>
+
+            <!-- Empty State -->
+            <tr *ngIf="!loading && data.length === 0">
+              <td [attr.colspan]="columns.length" class="py-12">
+                <app-empty-state 
+                  [icon]="emptyIcon" 
+                  [title]="emptyTitle" 
+                  [message]="emptyDescription">
+                  <ng-content select="[empty-actions]"></ng-content>
+                </app-empty-state>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div *ngIf="showPagination && total > 0 && !loading" class="px-6 py-4 border-t border-slate-50 bg-slate-50/30">
+        <app-pagination 
+          [page]="page" 
+          [totalPages]="totalPages" 
+          (pageChange)="pageChange.emit($event)">
+        </app-pagination>
+      </div>
+    </div>
+  

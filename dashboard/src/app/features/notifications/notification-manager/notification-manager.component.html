@@ -1,0 +1,120 @@
+
+    <div class="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <!-- Header Section -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+        <div>
+          <h1 class="text-2xl font-black text-slate-800 tracking-tight italic flex items-center gap-2">
+            <span class="w-1.5 h-8 bg-blue-600 rounded-full"></span>
+            مركز بث الإشعارات
+          </h1>
+          <p class="text-slate-500 font-bold mt-1 mr-3.5 italic leading-relaxed">إرسال تنبيهات فورية للطلاب داخل التطبيق، وإبلاغهم بالمواعيد والنتائج.</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <!-- Notification Composer -->
+        <div class="lg:col-span-7 bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm space-y-8">
+          <div class="flex items-center gap-4 p-4 bg-blue-50 rounded-3xl border border-blue-100/50">
+            <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm text-blue-500">
+              <app-icon name="megaphone" [size]="24"></app-icon>
+            </div>
+            <p class="text-xs font-black text-blue-600 leading-relaxed uppercase tracking-tighter">
+              سيتم عرض هذه الرسالة في قسم الإشعارات لدى الطلاب المستهدفين فور الإرسال.
+            </p>
+          </div>
+
+          <form [formGroup]="broadcastForm" (ngSubmit)="sendBroadcast()" class="space-y-6">
+            <!-- Targeting Options -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-slate-50/50 rounded-3xl border border-slate-100">
+              <div class="space-y-2">
+                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">من يستلم الإشعار؟</label>
+                <select formControlName="target" class="w-full px-5 py-4 bg-white border border-slate-100 rounded-2xl outline-none font-bold appearance-none transition-all focus:ring-4 focus:ring-blue-500/5">
+                  <option value="ALL">جميع الطلاب (All)</option>
+                  <option value="BY_CENTER">طلاب سنتر معين</option>
+                  <option value="BY_LEVEL">طلاب سنة دراسية محددة</option>
+                </select>
+              </div>
+
+              <!-- Contextual Selection -->
+              <div *ngIf="broadcastForm.get('target')?.value === 'BY_CENTER'" class="space-y-2">
+                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">اختر السنتر</label>
+                <select formControlName="centerId" class="w-full px-5 py-4 bg-white border border-slate-100 rounded-2xl outline-none font-bold appearance-none focus:ring-4 focus:ring-blue-500/5 transition-all">
+                  <option [ngValue]="null">--- اختر الفرع ---</option>
+                  <option *ngFor="let c of centers()" [value]="c.id">{{ c.name }}</option>
+                </select>
+                <p *ngIf="broadcastForm.get('centerId')?.invalid && broadcastForm.get('centerId')?.touched" class="text-[10px] text-red-500 font-bold px-2">الرجاء اختيار السنتر</p>
+              </div>
+
+              <div *ngIf="broadcastForm.get('target')?.value === 'BY_LEVEL'" class="space-y-2">
+                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">السنة الدراسية</label>
+                <select formControlName="level" class="w-full px-5 py-4 bg-white border border-slate-100 rounded-2xl outline-none font-bold appearance-none focus:ring-4 focus:ring-blue-500/5 transition-all">
+                  <option value="">--- اختر السنة ---</option>
+                  <option value="الصف الاول الثانوي">الصف الأول الثانوي</option>
+                  <option value="الصف الثاني الثانوي">الصف الثاني الثانوي</option>
+                  <option value="الصف الثالث الثانوي">الصف الثالث الثانوي</option>
+                </select>
+                <p *ngIf="broadcastForm.get('level')?.invalid && broadcastForm.get('level')?.touched" class="text-[10px] text-red-500 font-bold px-2">الرجاء اختيار السنة الدراسية</p>
+              </div>
+            </div>
+
+            <!-- Content -->
+            <div class="space-y-4">
+              <div class="space-y-2">
+                <label class="text-xs font-black text-slate-400 uppercase tracking-widest mr-2">عنوان التنبيه *</label>
+                <input type="text" formControlName="title" placeholder="مثال: هام: موعد المراجعة النهائية" 
+                       class="w-full px-6 py-4.5 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-bold" />
+              </div>
+
+              <div class="space-y-2">
+                <label class="text-xs font-black text-slate-400 uppercase tracking-widest mr-2">محتوى الإشعار *</label>
+                <textarea formControlName="body" rows="6" placeholder="اكتب تفاصيل التنبيه هنا..." 
+                          class="w-full px-6 py-5 bg-slate-50 border border-slate-100 rounded-3xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-bold placeholder:text-slate-300 resize-none"></textarea>
+              </div>
+            </div>
+
+            <button type="submit" [disabled]="broadcastForm.invalid || isSending()"
+                    class="w-full py-5 bg-blue-600 text-white rounded-3xl font-black shadow-2xl shadow-blue-200 hover:bg-blue-700 disabled:opacity-50 transition-all font-sans relative overflow-hidden group">
+              <span *ngIf="!isSending()" class="relative z-10 flex items-center justify-center gap-2">
+                <app-icon name="send" [size]="20"></app-icon> إرسال التنبيه الآن
+              </span>
+              <span *ngIf="isSending()" class="relative z-10 flex items-center justify-center gap-3">
+                <span class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                جاري الإرسال...
+              </span>
+            </button>
+          </form>
+        </div>
+
+        <!-- Recent Broadcasts -->
+        <div class="lg:col-span-5 space-y-6">
+          <div class="flex items-center justify-between mx-2">
+            <h3 class="text-xl font-black text-slate-800 flex items-center gap-2">
+              <app-icon name="history" [size]="20" className="text-slate-400"></app-icon> سجل الحملات المجمعة
+            </h3>
+            <span class="text-[10px] font-black text-slate-300 bg-slate-50 px-2 py-1 rounded">آخر 20 حملة</span>
+          </div>
+
+          <div class="space-y-4 max-h-[700px] overflow-y-auto pr-2 custom-scrollbar">
+            <div *ngFor="let batch of history()" class="group bg-white p-5 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all">
+              <div class="flex justify-between items-start mb-2">
+                <h4 class="font-black text-slate-800 text-sm leading-tight">{{ batch.title }}</h4>
+                <span class="text-[10px] font-black bg-emerald-50 text-emerald-600 px-2 py-1 rounded-lg">
+                  {{ batch.targetCount }} طالب
+                </span>
+              </div>
+              <p class="text-xs text-slate-500 font-medium line-clamp-2 leading-relaxed mb-4 italic">{{ batch.body }}</p>
+              
+              <div class="flex justify-between items-center pt-3 border-t border-slate-50">
+                <span class="text-[10px] font-black text-slate-400 capitalize">كود الحملة: {{ batch.batchId }}</span>
+                <span class="text-[10px] font-black text-slate-400">{{ batch.date | date:'shortTime' }} | {{ batch.date | date:'shortDate' }}</span>
+              </div>
+            </div>
+
+            <div *ngIf="history().length === 0 && !isLoading()" class="text-center py-20 text-slate-300 font-bold italic">
+              لم تقم بإرسال أي حملات مجمعة مؤخراً.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  

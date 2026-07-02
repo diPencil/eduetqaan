@@ -1,0 +1,277 @@
+
+    <div class="space-y-6 font-sans pb-20" dir="rtl">
+      <!-- Header Section -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 class="text-2xl font-black text-slate-800 tracking-tight italic flex items-center gap-2">
+            <span class="w-1.5 h-8 bg-blue-600 rounded-full"></span>
+            حجوزات جلسات اللايف
+          </h1>
+          <p class="text-slate-500 font-bold mt-1 mr-3.5 italic">إدارة طلبات الطلاب والمواعيد المجدولة لمتابعة المحتوى التعليمي.</p>
+        </div>
+        
+        <div class="flex items-center gap-3">
+          <div class="relative group">
+            <input 
+              type="text" 
+              [(ngModel)]="searchPhone"
+              (input)="loadRequests()"
+              placeholder="بحث برقم الواتساب..."
+              class="bg-white border-2 border-slate-100 rounded-[30px] px-6 py-3 pr-12 text-sm font-bold focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all w-64 shadow-sm"
+            >
+            <app-icon name="search" [size]="18" className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors"></app-icon>
+          </div>
+
+          <select 
+            [(ngModel)]="filterStatus"
+            (change)="loadRequests()"
+            class="bg-white border-2 border-slate-100 rounded-[30px] px-6 py-3 text-sm font-bold focus:border-blue-500 outline-none shadow-sm cursor-pointer"
+          >
+            <option value="">جميع الحالات</option>
+            <option value="new">طلبات جديدة</option>
+            <option value="contacted">تم التواصل</option>
+            <option value="ignored">متجاهلة</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Stats Row -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm group hover:border-blue-200 transition-all relative overflow-hidden">
+          <div class="absolute -right-4 -bottom-4 opacity-5 scale-150 rotate-12 transition-transform group-hover:rotate-6">
+             <app-icon name="inbox" [size]="100"></app-icon>
+          </div>
+          <div class="relative z-10 flex items-center gap-5">
+            <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
+              <app-icon name="inbox" [size]="28"></app-icon>
+            </div>
+            <div>
+              <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-2">إجمالي الطلبات</p>
+              <h4 class="text-3xl font-black text-slate-900 tracking-tight">{{ requests().length }}</h4>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm group hover:border-amber-200 transition-all">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center text-amber-500 group-hover:scale-110 transition-transform">
+              <app-icon name="clock" [size]="24"></app-icon>
+            </div>
+            <div>
+              <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">طلبات معلقة</p>
+              <h4 class="text-2xl font-black text-slate-800">{{ pendingCount() }}</h4>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm group hover:border-emerald-200 transition-all">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform">
+              <app-icon name="calendar" [size]="24"></app-icon>
+            </div>
+            <div>
+              <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">مواعيد قادمة</p>
+              <h4 class="text-2xl font-black text-slate-800">{{ scheduledCount() }}</h4>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm group hover:border-rose-200 transition-all">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 bg-rose-50 rounded-xl flex items-center justify-center text-rose-500 group-hover:scale-110 transition-transform">
+              <app-icon name="phone-off" [size]="24"></app-icon>
+            </div>
+            <div>
+              <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">تم تجاهلها</p>
+              <h4 class="text-2xl font-black text-slate-800">{{ ignoredCount() }}</h4>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Table Section -->
+      <div class="bg-white rounded-[40px] border border-slate-100 shadow-2xl shadow-slate-200/50 overflow-hidden relative">
+        <div *ngIf="isLoading()" class="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-10 flex items-center justify-center">
+          <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-right divide-y divide-slate-50">
+            <thead class="bg-slate-50/50">
+              <tr>
+                <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">الطالب / المصدر</th>
+                <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-center">التاريخ</th>
+                <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-center">الموعد المجدول</th>
+                <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-center">الحالة</th>
+                <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-left">الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-50">
+              <tr *ngFor="let req of requests()" class="hover:bg-slate-50/80 transition-all group">
+                <td class="px-8 py-6">
+                  <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 font-black text-xl group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm">
+                      {{ (req.studentName || req.name || 'S').charAt(0) }}
+                    </div>
+                    <div>
+                      <h4 class="font-black text-slate-800 text-sm italic">{{ req.studentName || req.name }}</h4>
+                      <p class="text-[11px] font-bold text-slate-400 flex items-center gap-1.5 mt-0.5">
+                        <app-icon name="phone" [size]="12"></app-icon>
+                        {{ req.phone }}
+                        <span class="w-1 h-1 bg-slate-200 rounded-full mx-1"></span>
+                        <span class="px-1.5 py-0.5 bg-slate-100 rounded text-[9px] uppercase tracking-tighter">{{ req.source }}</span>
+                      </p>
+                    </div>
+                  </div>
+                </td>
+                
+                <td class="px-8 py-6 text-center italic">
+                  <span class="text-xs font-black text-slate-600">{{ req.createdAt | date:'yyyy/MM/dd' }}</span>
+                  <p class="text-[10px] font-bold text-slate-400 mt-0.5">{{ req.createdAt | date:'hh:mm a' }}</p>
+                </td>
+
+                <td class="px-8 py-6 text-center">
+                  <div *ngIf="req.scheduledAt" class="flex flex-col items-center">
+                    <span class="text-xs font-black text-blue-600 bg-blue-50 px-3 py-1 rounded-xl border border-blue-100">
+                      {{ req.scheduledAt | date:'yyyy/MM/dd hh:mm a' }}
+                    </span>
+                    <a *ngIf="req.meetLink" [href]="req.meetLink" target="_blank" class="mt-2 text-[10px] font-black text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 shadow-sm">
+                      <app-icon name="video" [size]="10"></app-icon> رابط الاجتماع
+                    </a>
+                  </div>
+                  <span *ngIf="!req.scheduledAt" class="text-[10px] font-bold text-slate-300 italic">غير محدد</span>
+                </td>
+
+                <td class="px-8 py-6">
+                  <div class="flex justify-center">
+                    <span [ngClass]="{
+                      'bg-amber-50 text-amber-600 border-amber-100': req.status === 'new',
+                      'bg-emerald-50 text-emerald-600 border-emerald-100': req.status === 'contacted',
+                      'bg-slate-50 text-slate-500 border-slate-100': req.status === 'ignored'
+                    }" class="px-4 py-1.5 rounded-xl text-[10px] font-black border uppercase italic tracking-widest shadow-sm">
+                      {{ req.status === 'new' ? 'طلب جديد' : (req.status === 'contacted' ? 'تم التواصل' : 'متجاهل') }}
+                    </span>
+                  </div>
+                </td>
+
+                <td class="px-8 py-6">
+                  <div class="flex items-center justify-start gap-2">
+                    <button (click)="openEditModal(req)" class="w-10 h-10 bg-white border border-slate-100 rounded-2xl flex items-center justify-center text-slate-400 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all shadow-sm group/btn" title="تحديث الحالة">
+                      <app-icon name="edit-3" [size]="18" className="transition-transform group-hover/btn:scale-110"></app-icon>
+                    </button>
+                    
+                    <a [href]="'https://wa.me/2' + req.phone" target="_blank" class="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-all shadow-sm group/btn" title="تواصل واتساب">
+                      <app-icon name="message-square" [size]="18" className="transition-transform group-hover/btn:scale-110"></app-icon>
+                    </a>
+
+                    <button *ngIf="req.status !== 'ignored'" (click)="updateStatus(req.id, 'ignored')" class="w-10 h-10 bg-white border border-slate-100 rounded-xl flex items-center justify-center text-slate-300 hover:text-rose-500 hover:border-rose-100 transition-all shadow-sm group/btn" title="تجاهل">
+                      <app-icon name="trash-2" [size]="18" className="transition-transform group-hover/btn:scale-110"></app-icon>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+
+              <tr *ngIf="requests().length === 0 && !isLoading()">
+                <td colspan="5" class="px-8 py-20 text-center">
+                  <div class="flex flex-col items-center gap-4 opacity-40">
+                    <div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center text-4xl">📭</div>
+                    <p class="text-slate-500 font-bold italic text-lg">لا توجد طلبات جلسات وفقاً للفلاتر الحالية</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Edit Modal -->
+      <div *ngIf="showModal()" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+        <div class="bg-white rounded-[32px] shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in duration-300 border border-white/20">
+          <div class="px-8 py-6 flex-shrink-0 flex items-center justify-between border-b border-slate-50 bg-slate-50/50">
+            <div class="flex items-center gap-3">
+              <div class="w-1.5 h-6 bg-blue-600 rounded-full"></div>
+              <h3 class="text-xl font-black text-slate-800 italic tracking-tight">تحديث طلب الجلسة</h3>
+            </div>
+            <button (click)="showModal.set(false)" class="w-10 h-10 bg-white text-slate-400 rounded-full flex items-center justify-center hover:bg-rose-50 hover:text-rose-500 transition-all shadow-sm font-black">✕</button>
+          </div>
+
+          <div class="p-8 space-y-6 overflow-y-auto custom-scrollbar flex-1">
+            <!-- Student Header -->
+            <div class="p-6 bg-blue-50/50 rounded-2xl border border-blue-100 flex items-center gap-4">
+              <div class="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center text-white text-2xl font-black shadow-lg shadow-blue-600/20">
+                {{ (selectedRequest()?.studentName || selectedRequest()?.name || 'S').charAt(0) }}
+              </div>
+              <div>
+                <h4 class="text-lg font-black text-slate-800 italic leading-none mb-1.5">{{ selectedRequest()?.studentName || selectedRequest()?.name }}</h4>
+                <p class="text-xs font-bold text-blue-600 flex items-center gap-2">
+                  <app-icon name="phone" [size]="12"></app-icon>
+                  {{ selectedRequest()?.phone }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Fields -->
+            <div class="space-y-6">
+              <div class="space-y-3">
+                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">حالة التواصل</label>
+                <div class="grid grid-cols-3 gap-3">
+                  <button 
+                    *ngFor="let s of ['new', 'contacted', 'ignored']"
+                    (click)="modalData.status = s"
+                    [ngClass]="modalData.status === s ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-500/20' : 'bg-white text-slate-500 border-slate-100 hover:border-blue-200'"
+                    class="px-4 py-3 rounded-xl border-2 text-[10px] font-black uppercase transition-all"
+                  >
+                    {{ s === 'new' ? 'جديد' : (s === 'contacted' ? 'تم التواصل' : 'تجاهل') }}
+                  </button>
+                </div>
+              </div>
+
+              <div class="space-y-3">
+                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">موعد الجلسة المجدول</label>
+                <div class="relative group">
+                  <input 
+                    type="datetime-local" 
+                    [(ngModel)]="modalData.scheduledAt"
+                    class="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl px-6 py-4 font-black text-sm focus:border-blue-500 focus:bg-white outline-none transition-all shadow-inner"
+                  >
+                  <app-icon name="calendar" [size]="18" className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-500 transition-colors"></app-icon>
+                </div>
+              </div>
+              <div class="space-y-3">
+                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">رابط الاجتماع (Google Meet, Zoom)</label>
+                <div class="relative group">
+                  <input 
+                    type="url" 
+                    [(ngModel)]="modalData.meetLink"
+                    placeholder="https://meet.google.com/..."
+                    class="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl px-6 py-4 font-black text-sm focus:border-blue-500 focus:bg-white outline-none transition-all shadow-inner text-left" dir="ltr"
+                  >
+                  <app-icon name="link" [size]="18" className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-500 transition-colors"></app-icon>
+                </div>
+              </div>
+              <div class="space-y-3">
+                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">ملاحظات داخلية</label>
+                <textarea 
+                  [(ngModel)]="modalData.notes"
+                  rows="4" 
+                  placeholder="سجل نتائج التواصل مع الطالب هنا..."
+                  class="w-full bg-slate-50 border-2 border-slate-50 rounded-[30px] px-6 py-5 font-bold text-sm focus:border-blue-500 focus:bg-white outline-none transition-all shadow-inner resize-none"
+                ></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-8 flex-shrink-0 bg-slate-50/50 border-t border-slate-50 flex justify-end gap-4">
+            <button (click)="showModal.set(false)" class="px-8 py-4 font-black text-slate-400 hover:text-slate-600 text-xs transition-all tracking-widest">إلغاء</button>
+            <button 
+              (click)="saveChanges()" 
+              [disabled]="isSaving()"
+              class="bg-blue-600 text-white px-10 py-4 rounded-3xl font-black shadow-2xl shadow-blue-600/30 hover:bg-blue-700 hover:-translate-y-1 transition-all disabled:opacity-50 disabled:translate-y-0 text-xs"
+            >
+              {{ isSaving() ? 'جاري الحفظ...' : 'حفظ التحديثات الآن ✨' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  

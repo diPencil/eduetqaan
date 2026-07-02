@@ -1,0 +1,394 @@
+
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-200" dir="rtl">
+      <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in duration-200 border border-slate-100">
+        
+        <!-- Header -->
+        <div class="px-10 py-8 border-b border-slate-100 flex items-center justify-between bg-white relative">
+          <div class="flex items-center gap-4">
+            <div class="w-14 h-14 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-indigo-100 italic">
+               <app-icon name="video" [size]="28"></app-icon>
+            </div>
+            <div>
+               <h3 class="text-2xl font-black text-slate-800 tracking-tight italic">{{ courseTitle }}</h3>
+               <p class="text-slate-400 text-sm font-bold mt-1">إدارة المحتوى التعليمي ومتابعة الحضور والغياب.</p>
+            </div>
+          </div>
+
+          <!-- Tab Switcher -->
+          <div class="absolute bottom-0 left-1/2 -translate-x-1/2 flex space-x-8 space-x-reverse">
+             <button (click)="viewMode.set('management')" 
+                     [ngClass]="viewMode() === 'management' ? 'text-indigo-600 border-indigo-600' : 'text-slate-400 border-transparent'"
+                     class="pb-4 px-2 border-b-2 font-black text-sm transition-all flex items-center gap-2">
+                <app-icon name="settings" [size]="16"></app-icon>
+                إدارة الدروس
+             </button>
+             <button (click)="viewMode.set('roster')" 
+                     [ngClass]="viewMode() === 'roster' ? 'text-indigo-600 border-indigo-600' : 'text-slate-400 border-transparent'"
+                     class="pb-4 px-2 border-b-2 font-black text-sm transition-all flex items-center gap-2">
+                <app-icon name="clipboard" [size]="16"></app-icon>
+                سجلات الحضور
+             </button>
+          </div>
+
+          <button (click)="close.emit()" class="w-12 h-12 flex items-center justify-center rounded-2xl hover:bg-rose-50 text-slate-400 hover:text-rose-500 transition-all border border-slate-100">
+             <app-icon name="x" [size]="20"></app-icon>
+          </button>
+        </div>
+
+        <div class="flex-1 flex overflow-hidden">
+          
+          <!-- SIDEBAR: Always visible for navigation -->
+          <div class="w-1/3 border-l border-slate-100 flex flex-col bg-slate-50/30">
+             <div class="p-6 border-b border-slate-100 bg-white/50 flex items-center justify-between">
+                <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest">المحتوى ({{ lessons().length }})</h4>
+                 <button *ngIf="viewMode() === 'management'" (click)="openAddForm()" class="bg-indigo-50 text-indigo-600 px-4 py-2 rounded-xl border border-indigo-100 hover:bg-indigo-600 hover:text-white transition-all text-[10px] font-black uppercase flex items-center gap-2">
+                    <app-icon name="plus" [size]="14"></app-icon>
+                    إضافة
+                 </button>
+             </div>
+             <div class="flex-1 overflow-y-auto p-4 space-y-3">
+                <button 
+                  *ngFor="let lesson of lessons()" 
+                  (click)="selectLesson(lesson)"
+                  [ngClass]="selectedLesson()?.id === lesson.id ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-100 scale-[1.02]' : 'bg-white text-slate-600 hover:bg-indigo-50 border border-slate-100'"
+                  class="w-full p-5 rounded-3xl text-right transition-all duration-300 group"
+                >
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                      <div class="w-10 h-10 rounded-xl flex items-center justify-center transition-transform" 
+                           [ngClass]="selectedLesson()?.id === lesson.id ? 'bg-white/20 text-white' : 'bg-slate-50 text-slate-400 group-hover:bg-indigo-100 group-hover:text-indigo-600'">
+                         <app-icon [name]="lesson.kind === 'homework' ? 'file-text' : 'video'" [size]="18"></app-icon>
+                      </div>
+                      <div class="text-right">
+                        <p class="font-black text-sm leading-tight line-clamp-1 italic">{{ lesson.title }}</p>
+                        <p class="text-[10px] mt-1 font-bold" [ngClass]="selectedLesson()?.id === lesson.id ? 'text-indigo-100' : 'text-slate-400'">
+                          {{ lesson.kind === 'lesson' ? 'محاضرة فيديو' : 'واجب منزلي' }}
+                        </p>
+                      </div>
+                    </div>
+                    <span *ngIf="lesson.status === 'draft'" class="bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded text-[8px] font-black">Draft</span>
+                  </div>
+                </button>
+
+                <div *ngIf="isLoadingLessons()" class="space-y-3 animate-pulse">
+                   <div *ngFor="let i of [1,2,3,4,5]" class="h-20 bg-white rounded-3xl border border-slate-100"></div>
+                </div>
+                
+                <div *ngIf="lessons().length === 0 && !isLoadingLessons()" class="py-12 text-center text-slate-300 font-bold italic">
+                   لا يوجد محتوى مضاف بعد
+                </div>
+             </div>
+          </div>
+
+          <!-- MAIN CONTENT AREA -->
+          <div class="flex-1 flex flex-col bg-white overflow-hidden">
+            
+            <!-- VIEW: Management (Form or Details) -->
+            <ng-container *ngIf="viewMode() === 'management'">
+               <div class="p-10 h-full overflow-y-auto">
+                  <div *ngIf="isFormOpen(); else lessonDetailBox" class="max-w-2xl mx-auto space-y-8 animate-in slide-in-from-bottom duration-300">
+                     <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+                        <h4 class="text-xl font-black text-slate-800">{{ isEditing() ? 'تعديل المحتوى' : 'إضافة محتوى جديد' }}</h4>
+                        <button (click)="isFormOpen.set(false)" class="text-slate-400 hover:text-slate-600">رجوع ↩</button>
+                     </div>
+
+                     <form (ngSubmit)="saveLesson()" class="space-y-6">
+                        <div class="grid grid-cols-2 gap-4">
+                           <div class="space-y-2 col-span-2">
+                              <label class="text-xs font-black text-slate-500 uppercase">عنوان الدرس/الواجب</label>
+                              <input type="text" [(ngModel)]="lessonForm.title" name="title" required class="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3 px-4 focus:ring-2 focus:ring-indigo-500 font-bold">
+                           </div>
+                           
+                           <div class="space-y-2">
+                              <label class="text-xs font-black text-slate-500 uppercase">النوع</label>
+                              <select [(ngModel)]="lessonForm.kind" name="kind" class="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3 px-4 font-bold">
+                                 <option value="lesson">محاضرة فيديو</option>
+                                 <option value="homework">واجب منزلي</option>
+                              </select>
+                           </div>
+
+                           <div class="space-y-2">
+                              <label class="text-xs font-black text-slate-500 uppercase">الحالة</label>
+                              <select [(ngModel)]="lessonForm.status" name="status" class="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3 px-4 font-bold">
+                                 <option value="published">منشور</option>
+                                 <option value="draft">مسودة</option>
+                              </select>
+                           </div>
+
+                           <ng-container *ngIf="lessonForm.kind === 'lesson'">
+                              <div class="space-y-2">
+                                 <label class="text-xs font-black text-slate-500 uppercase">مزود الفيديو</label>
+                                 <select [(ngModel)]="lessonForm.streamType" name="streamType" class="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3 px-4 font-bold">
+                                    <option value="external">YouTube / Vimeo (External)</option>
+                                    <option value="mp4">MP4 Direct</option>
+                                    <option value="hls">HLS (Adaptive)</option>
+                                 </select>
+                              </div>
+                              <div class="space-y-2">
+                                 <label class="text-xs font-black text-slate-500 uppercase">رابط الفيديو أو Video ID</label>
+                                 <div class="flex gap-2">
+                                    <input type="text" [(ngModel)]="lessonForm.videoId" name="videoId" class="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3 px-4 font-mono text-xs" placeholder="مثلاً: dQw4w9WgXcQ">
+                                    <button type="button" *ngIf="lessonForm.streamType === 'external' && lessonForm.videoId" (click)="fetchYoutubeDuration()" class="bg-indigo-100 text-indigo-600 px-4 rounded-2xl font-black text-xs hover:bg-indigo-200 transition-all whitespace-nowrap flex items-center gap-2">
+                                       <app-icon *ngIf="isFetchingDuration()" name="loader" className="animate-spin" [size]="14"></app-icon>
+                                       <app-icon *ngIf="!isFetchingDuration()" name="youtube" [size]="14"></app-icon>
+                                       استخراج المدة
+                                    </button>
+                                 </div>
+                              </div>
+                           </ng-container>
+
+                           <div class="space-y-2">
+                              <label class="text-xs font-black text-slate-500 uppercase">المدة (بالدقائق)</label>
+                              <input type="number" [(ngModel)]="lessonForm.durationMin" name="durationMin" class="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3 px-4 font-bold">
+                           </div>
+
+                           <div class="space-y-2">
+                              <label class="text-xs font-black text-slate-500 uppercase">الترتيب</label>
+                              <input type="number" [(ngModel)]="lessonForm.orderIndex" name="orderIndex" class="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3 px-4 font-bold">
+                           </div>
+
+                           <!-- المرفقات -->
+                           <div class="col-span-2 space-y-4 pt-6 border-t border-slate-100 mt-2">
+                              <div class="flex items-center justify-between">
+                                 <label class="text-xs font-black text-slate-500 uppercase flex items-center gap-2">
+                                    <app-icon name="paperclip" [size]="14"></app-icon>
+                                    المرفقات (ملفات، ملازم)
+                                 </label>
+                                 <button type="button" (click)="addResource()" class="text-[10px] bg-slate-100 text-slate-600 px-3 py-1.5 rounded-lg font-black hover:bg-slate-200 transition-all flex items-center gap-1.5">
+                                    <app-icon name="plus" [size]="12"></app-icon>
+                                    إضافة مرفق
+                                 </button>
+                              </div>
+
+                              <div *ngIf="!lessonForm.resources?.length" class="text-center text-slate-400 text-xs font-bold py-6 border-2 border-dashed border-slate-100 rounded-2xl bg-slate-50/30">
+                                 لا توجد مرفقات مضافة لهذه المحاضرة
+                              </div>
+
+                              <div *ngFor="let res of lessonForm.resources; let i = index; trackBy: trackByIndex" class="flex flex-col md:flex-row items-center gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-100 shadow-sm animate-in slide-in-from-right-4 duration-300">
+                                 <div class="flex-1 w-full space-y-3">
+                                    <input type="text" [(ngModel)]="res.title" name="resTitle_{{i}}" required placeholder="اسم الملف (مثال: ملزمة الباب الأول)" class="w-full bg-white border border-slate-200 rounded-xl py-2.5 px-4 text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-100 transition-all">
+                                    <input type="text" [(ngModel)]="res.url" name="resUrl_{{i}}" required placeholder="رابط الملف (Google Drive, PDF URL...)" class="w-full bg-white border border-slate-200 rounded-xl py-2.5 px-4 text-[11px] font-mono outline-none focus:ring-2 focus:ring-indigo-100 transition-all text-left" dir="ltr">
+                                 </div>
+                                 <button type="button" (click)="removeResource(i)" class="w-full md:w-12 h-10 md:h-[5.5rem] flex-shrink-0 flex items-center justify-center rounded-xl bg-white border border-rose-100 text-rose-500 hover:bg-rose-50 hover:border-rose-200 transition-all shadow-sm">
+                                    <app-icon name="trash" [size]="16"></app-icon>
+                                 </button>
+                              </div>
+                           </div>
+                        </div>
+
+                        <div class="flex items-center justify-end gap-3 pt-6">
+                           <button type="button" (click)="isFormOpen.set(false)" class="px-6 py-2 text-slate-400 font-bold hover:text-slate-600">إلغاء</button>
+                           <button type="submit" [disabled]="isSaving()" class="bg-indigo-600 text-white px-10 py-3 rounded-2xl font-black shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all flex items-center gap-2">
+                              <app-icon *ngIf="isSaving()" name="loader" className="animate-spin" [size]="18"></app-icon>
+                              <app-icon *ngIf="!isSaving()" name="check-circle" [size]="18"></app-icon>
+                              {{ isEditing() ? 'حفظ التغييرات' : 'إضافة الآن' }}
+                           </button>
+                        </div>
+                     </form>
+                  </div>
+
+                  <ng-template #lessonDetailBox>
+                     <div *ngIf="selectedLesson(); else emptyManagement" class="space-y-8 animate-in fade-in duration-300">
+                        <div class="bg-slate-50 border border-slate-100 rounded-[2rem] p-8 flex flex-col md:flex-row items-center justify-between gap-6">
+                            <div class="flex items-center gap-6">
+                               <div class="w-20 h-20 bg-white rounded-[2rem] shadow-sm flex items-center justify-center text-indigo-500 border border-slate-100">
+                                  <app-icon [name]="selectedLesson()?.kind === 'homework' ? 'file-text' : 'video'" [size]="40"></app-icon>
+                               </div>
+                               <div>
+                                  <h4 class="text-2xl font-black text-slate-800 italic">{{ selectedLesson()?.title }}</h4>
+                                  <div class="flex flex-wrap items-center gap-4 mt-2">
+                                     <span class="bg-white border border-slate-200 px-3 py-1 rounded-full text-[10px] font-black text-slate-500 uppercase tracking-widest italic">{{ selectedLesson()?.kind === 'lesson' ? 'LECTURE' : 'HOMEWORK' }}</span>
+                                     <span class="text-slate-400 text-[10px] font-black uppercase flex items-center gap-1.5">
+                                        <app-icon name="clock" [size]="14"></app-icon>
+                                        {{ selectedLesson()?.durationSec ? (selectedLesson()!.durationSec / 60 | number:'1.0-0') : 0 }} دقيقة
+                                     </span>
+                                     <span [ngClass]="selectedLesson()?.status === 'published' ? 'text-emerald-500' : 'text-amber-500'" class="text-[10px] font-black uppercase flex items-center gap-1.5">
+                                        <div class="w-1.5 h-1.5 rounded-full" [ngClass]="selectedLesson()?.status === 'published' ? 'bg-emerald-500' : 'bg-amber-500'"></div>
+                                        {{ selectedLesson()?.status }}
+                                     </span>
+                                  </div>
+                               </div>
+                            </div>
+                            <div class="flex gap-3">
+                               <button (click)="openEditForm(selectedLesson())" class="bg-white text-indigo-600 px-6 py-3 rounded-2xl font-black border border-indigo-100 shadow-sm hover:shadow-md transition-all flex items-center gap-2">
+                                  <app-icon name="edit" [size]="18"></app-icon>
+                                  تعديل
+                               </button>
+                               <button (click)="deleteLesson(selectedLesson()?.id)" class="bg-white text-rose-500 px-4 py-3 rounded-2xl font-black border border-rose-50 shadow-sm hover:bg-red-50 transition-all flex items-center gap-2">
+                                  <app-icon name="trash" [size]="18"></app-icon>
+                                  حذف
+                               </button>
+                            </div>
+                         </div>
+
+                        <div class="grid grid-cols-2 gap-6">
+                           <div class="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
+                              <h5 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">بيانات الفيديو / المحتوى</h5>
+                              <div class="space-y-3">
+                                 <div class="flex justify-between text-sm">
+                                    <span class="text-slate-400 font-bold">المزود (Provider):</span>
+                                    <span class="text-slate-700 font-black">{{ selectedLesson()?.provider }}</span>
+                                 </div>
+                                 <div class="flex justify-between text-sm">
+                                    <span class="text-slate-400 font-bold">النوع (Stream):</span>
+                                    <span class="text-slate-700 font-black">{{ selectedLesson()?.streamType }}</span>
+                                 </div>
+                                 <div class="flex flex-col gap-1.5 text-sm mt-4">
+                                    <span class="text-slate-400 font-bold">Video ID / URL:</span>
+                                    <span class="text-slate-700 font-mono text-[10px] bg-slate-50 p-3 rounded-xl break-all border border-slate-100 shadow-inner" dir="ltr">{{ selectedLesson()?.videoId || selectedLesson()?.streamUrl || 'N/A' }}</span>
+                                 </div>
+                              </div>
+                           </div>
+                           <div class="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm flex flex-col justify-center">
+                              <h5 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">خصائص العرض</h5>
+                              <div class="grid grid-cols-2 gap-4">
+                                 <div class="bg-slate-50 rounded-2xl p-3 text-center border border-slate-100 shadow-inner">
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">الترتيب</p>
+                                    <p class="text-xl font-black text-indigo-600">{{ selectedLesson()?.orderIndex || '1' }}</p>
+                                 </div>
+                                 <div class="bg-slate-50 rounded-2xl p-3 text-center border border-slate-100 shadow-inner">
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">المرفقات</p>
+                                    <p class="text-xl font-black text-slate-700">{{ selectedLesson()?.resources?.length || '0' }}</p>
+                                 </div>
+                                 <div class="col-span-2 bg-slate-50 rounded-2xl p-3 flex items-center justify-between border border-slate-100 shadow-inner">
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">نوع الوصول</p>
+                                    <span [ngClass]="selectedLesson()?.isFreePreview ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-200 text-slate-500'" class="px-2 py-1 rounded border border-transparent text-[10px] font-black">
+                                       {{ selectedLesson()?.isFreePreview ? 'مشاهدة مجانية' : 'للمشتركين فقط' }}
+                                    </span>
+                                 </div>
+                              </div>
+                           </div>
+                        </div>
+                     </div>
+                  </ng-template>
+
+                  <ng-template #emptyManagement>
+                     <div class="h-full flex flex-col items-center justify-center p-20 text-slate-200">
+                        <div class="w-32 h-32 bg-slate-50 rounded-[2.5rem] flex items-center justify-center mb-6 border border-slate-100 shadow-inner">
+                           <app-icon name="settings" [size]="64" className="opacity-10"></app-icon>
+                        </div>
+                        <h4 class="text-2xl font-black text-slate-300 italic">إدارة محتوى الكورس</h4>
+                        <p class="text-slate-400 mt-2 font-bold italic text-center max-w-sm">اختر محتوى من القائمة الجانبية لتعديله، أو قم بإضافة محتوى جديد لبدء بناء الكورس.</p>
+                     </div>
+                  </ng-template>
+               </div>
+            </ng-container>
+
+            <!-- VIEW: Roster -->
+            <ng-container *ngIf="viewMode() === 'roster'">
+               <ng-container *ngIf="selectedLesson(); else selectPlaceholder">
+                  <!-- Roster Header (Refined) -->
+                  <div class="p-5 border-b border-slate-100 flex items-center justify-between gap-6 bg-slate-50/10">
+                     <div class="flex-1">
+                        <h4 class="text-lg font-black text-slate-800">سجل حضور: <span class="text-indigo-600">{{ selectedLesson()?.title }}</span></h4>
+                        <div class="flex items-center gap-4 mt-2">
+                           <div class="flex items-center gap-2">
+                              <label class="text-[9px] font-black text-slate-400 uppercase tracking-tighter">عرض بيانات سنتر:</label>
+                              <select [(ngModel)]="selectedCenterId" (change)="loadRoster()" class="bg-white border border-slate-200 rounded-xl px-4 py-1.5 text-xs font-bold text-slate-600 focus:ring-2 focus:ring-indigo-500 shadow-sm transition-all outline-none">
+                                <option [value]="null">اختر السنتر...</option>
+                                <option *ngFor="let c of centers()" [value]="c.id">{{ c.name }}</option>
+                              </select>
+                           </div>
+                        </div>
+                     </div>
+
+                     <div class="flex items-center gap-3">
+                         <button 
+                           *ngIf="roster().length > 0"
+                           (click)="exportRosterToExcel()"
+                           class="flex items-center gap-3 px-8 py-3 bg-blue-600 text-white rounded-2xl shadow-xl shadow-blue-900/10 hover:bg-slate-800 transition-all font-black text-[11px] tracking-tight uppercase"
+                         >
+                            <app-icon name="download" [size]="16"></app-icon>
+                            تصدير الكشف
+                         </button>
+
+                        <div class="flex items-center gap-2 bg-white p-1.5 rounded-xl border border-slate-100 shadow-sm">
+                           <div class="text-center px-4 py-1 bg-emerald-50 rounded-lg border border-emerald-100 min-w-[65px]">
+                              <p class="text-[8px] font-black text-emerald-600 uppercase tracking-tighter leading-none mb-1">حاضر</p>
+                              <p class="text-sm font-black text-emerald-700 leading-none">{{ stats().present }}</p>
+                           </div>
+                           <div class="text-center px-4 py-1 bg-red-50 rounded-lg border border-red-100 min-w-[65px]">
+                              <p class="text-[8px] font-black text-red-500 uppercase tracking-tighter leading-none mb-1">غائب</p>
+                              <p class="text-sm font-black text-red-700 leading-none">{{ stats().absent }}</p>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+
+                  <!-- Roster Table (Responsive Container) -->
+                  <div class="flex-1 overflow-x-auto custom-scrollbar">
+                    <div *ngIf="!selectedCenterId" class="h-full flex flex-col items-center justify-center p-12 text-slate-300">
+                        <div class="w-24 h-24 bg-slate-50 rounded-[2rem] flex items-center justify-center mb-6 border border-slate-100 shadow-inner">
+                           <app-icon name="map-pin" [size]="48" className="opacity-10"></app-icon>
+                        </div>
+                        <p class="font-black text-lg italic">يرجى اختيار السنتر لعرض قائمة الطلاب</p>
+                    </div>
+                    
+                    <div *ngIf="selectedCenterId && isLoadingRoster()" class="p-8 space-y-3">
+                       <div *ngFor="let i of [1,2,3,4,5,6,7,8]" class="h-10 bg-slate-50/50 rounded-lg animate-pulse"></div>
+                    </div>
+
+                    <table *ngIf="selectedCenterId && !isLoadingRoster()" class="w-full text-right min-w-[600px] border-separate border-spacing-0">
+                      <thead class="sticky top-0 bg-white/95 backdrop-blur-md z-10">
+                        <tr class="bg-slate-50/50 text-[9px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
+                          <th class="px-5 py-3.5 border-b border-slate-100">الطالب</th>
+                          <th class="px-5 py-3.5 text-center border-b border-slate-100">كود الطالب</th>
+                          <th class="px-5 py-3.5 text-center border-b border-slate-100">حضور السنتر</th>
+                          <th class="px-5 py-3.5 text-center border-b border-slate-100">مشاهدة أونلاين</th>
+                          <th class="px-5 py-3.5 text-center border-b border-slate-100">وقت الحضور</th>
+                        </tr>
+                      </thead>
+                      <tbody class="divide-y divide-slate-50 bg-white">
+                        <tr *ngFor="let row of roster()" class="hover:bg-indigo-50/30 transition-colors group">
+                          <td class="px-5 py-2.5">
+                            <p class="font-black text-slate-700 text-xs leading-none">{{ row.fullName }}</p>
+                            <p *ngIf="row.originalCenterId && row.originalCenterId !== selectedCenterId" class="text-[8px] text-amber-600 font-bold italic mt-1">حضور تعويض من سنتر آخر</p>
+                          </td>
+                          <td class="px-5 py-2.5 text-center">
+                            <span class="font-mono text-[10px] text-slate-500 bg-slate-50 px-2 py-0.5 rounded border border-slate-100">{{ row.code || '---' }}</span>
+                          </td>
+                           <td class="px-5 py-2.5 text-center">
+                              <span [ngClass]="row.presentInCenter ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-red-50 text-red-600 border-red-100 font-black'" 
+                                    class="px-2.5 py-1.5 rounded-lg text-[9px] font-black border uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 min-w-[80px]">
+                                <app-icon [name]="row.presentInCenter ? 'check-circle' : 'x-circle'" [size]="12"></app-icon>
+                                {{ row.presentInCenter ? 'حاضر' : 'غائب' }}
+                              </span>
+                           </td>
+                          <td class="px-5 py-2.5 text-center">
+                             <span [ngClass]="row.presentOnline ? 'bg-blue-50 text-blue-600 border-blue-100 font-black' : 'text-slate-300 opacity-30'" 
+                                   class="px-2.5 py-1 rounded-lg text-[9px] border border-transparent">
+                               {{ row.presentOnline ? '📺 أونلاين' : '---' }}
+                             </span>
+                          </td>
+                          <td class="px-5 py-2.5 text-center text-[10px] font-bold text-slate-400">
+                             {{ row.lastAttendanceAt ? (row.lastAttendanceAt | date:'hh:mm a') : '---' }}
+                          </td>
+                        </tr>
+                        <tr *ngIf="roster().length === 0">
+                           <td colspan="5" class="px-5 py-16 text-center text-slate-300 font-black text-sm italic">لا يوجد سجلات حضور متاحة لهذا البحث</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+               </ng-container>
+               <ng-template #selectPlaceholder>
+                  <div class="h-full flex flex-col items-center justify-center p-20 text-slate-200">
+                    <div class="w-32 h-32 bg-slate-50 rounded-[2.5rem] flex items-center justify-center mb-6 border border-slate-100 shadow-inner">
+                       <app-icon name="folder-open" [size]="64" className="opacity-10"></app-icon>
+                    </div>
+                    <h4 class="text-2xl font-black text-slate-300 italic">اختر محاضرة للمتابعة</h4>
+                    <p class="text-slate-400 mt-2 font-bold italic text-center max-w-sm">سيتم عرض قائمة الطلاب وحالات الحضور والغياب هنا</p>
+                  </div>
+               </ng-template>
+            </ng-container>
+
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="px-10 py-6 border-t border-slate-100 bg-slate-50/50 flex justify-end">
+          <button (click)="close.emit()" class="px-8 py-3 bg-slate-900 text-white rounded-2xl font-black shadow-xl shadow-slate-200 hover:bg-slate-800 transition-all">إغلاق النافذة</button>
+        </div>
+      </div>
+    </div>
+  

@@ -1,0 +1,76 @@
+
+    <div class="min-h-screen flex items-center justify-center bg-slate-50 font-sans relative overflow-hidden">
+      <!-- Decorative Background Elements (System Style) -->
+      <div class="absolute top-0 right-0 w-[40rem] h-[40rem] bg-blue-100/30 rounded-full blur-[100px] -mr-64 -mt-64"></div>
+      <div class="absolute bottom-0 left-0 w-[40rem] h-[40rem] bg-indigo-100/30 rounded-full blur-[100px] -ml-64 -mb-64"></div>
+      
+      <div class="max-w-md w-full mx-4 relative z-10 animate-in fade-in zoom-in duration-700">
+        <!-- Brand Header -->
+        <div class="text-center mb-12">
+          <div class="w-24 h-24 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-[2.5rem] shadow-2xl shadow-blue-500/30 flex items-center justify-center mx-auto mb-6 rotate-3 hover:rotate-0 transition-transform duration-500 cursor-pointer">
+             <span class="text-white text-5xl font-black italic tracking-tighter">M</span>
+          </div>
+          <h1 class="text-4xl font-black text-slate-900 italic tracking-tight mb-2 uppercase">المبدع محمد سامي</h1>
+          <p class="text-slate-400 text-[10px] font-black uppercase tracking-[0.4em] mb-4">Educational Management Suite</p>
+          <div class="w-12 h-1 bg-blue-600 rounded-full mx-auto"></div>
+        </div>
+
+        <!-- Login Card: New System Aesthetic -->
+        <div class="bg-white p-12 rounded-[3.5rem] shadow-2xl shadow-slate-200/60 border border-white relative group">
+          <div class="absolute top-0 right-10 w-20 h-20 bg-blue-50 rounded-bl-[3rem] -mt-px -mr-px transition-all group-hover:scale-110"></div>
+          
+          <h2 class="text-slate-800 text-2xl font-black mb-10 text-center italic tracking-tight">تسجيل دخول الإدارة</h2>
+          
+          <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-8">
+            <div class="space-y-6">
+              <div class="space-y-2">
+                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-4">البريد الإلكتروني</label>
+                <input
+                  formControlName="email"
+                  type="email"
+                  placeholder="admin@mohamedsamy.com"
+                  class="w-full bg-slate-50 border-none rounded-2xl px-6 py-5 text-slate-900 text-sm font-bold focus:ring-4 focus:ring-blue-600/10 outline-none transition-all placeholder:text-slate-300"
+                />
+              </div>
+              
+              <div class="space-y-2">
+                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-4">كلمة المرور</label>
+                <input
+                  formControlName="password"
+                  type="password"
+                  placeholder="••••••••"
+                  class="w-full bg-slate-50 border-none rounded-2xl px-6 py-5 text-slate-900 text-sm font-bold focus:ring-4 focus:ring-blue-600/10 outline-none transition-all placeholder:text-slate-300"
+                />
+              </div>
+            </div>
+
+            <div *ngIf="error()" class="bg-red-50 border border-red-100 text-red-500 text-[11px] font-black p-4 rounded-2xl text-center animate-in shake duration-500">
+              <span class="mr-2">✕</span> {{ error() }}
+            </div>
+
+            <button
+              type="submit"
+              [disabled]="loginForm.invalid || isLoading()"
+              class="w-full bg-slate-900 hover:bg-blue-600 disabled:opacity-50 text-white font-black py-5 rounded-[2.5rem] shadow-2xl shadow-slate-300 transition-all hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-3 decoration-0 no-underline"
+            >
+              <div *ngIf="isLoading()" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+              <span class="text-sm font-black uppercase tracking-widest">{{ isLoading() ? 'جاري التحقق...' : 'دخول المنصة الآن' }}</span>
+            </button>
+          </form>
+        </div>
+
+        <!-- System Footer -->
+        <div class="mt-12 text-center space-y-6">
+          <div class="flex items-center justify-center gap-6 text-slate-400 text-[10px] font-black uppercase tracking-[0.2em]">
+            <span class="flex items-center gap-2"><div class="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></div> v1.0</span>
+            <span class="w-px h-3 bg-slate-200"></span>
+            <span>نظام محمي بالكامل</span>
+          </div>
+          <div class="pt-6 border-t border-slate-100">
+             <p class="text-slate-300 text-[9px] font-black uppercase tracking-[0.3em] mb-2">تطوير وتصميم</p>
+             <p class="text-slate-900 text-xs font-black italic tracking-tighter opacity-80 hover:opacity-100 transition-opacity">إتقان كود للحلول البرمجية</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  

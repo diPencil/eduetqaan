@@ -1,0 +1,146 @@
+
+    <div class="space-y-6 font-sans pb-20" dir="rtl">
+      <!-- Header Section -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 class="text-2xl font-black text-slate-800 tracking-tight italic flex items-center gap-2">
+            <span class="w-1.5 h-8 bg-blue-600 rounded-full"></span>
+            بنك الأسئلة الشامل
+          </h1>
+          <p class="text-slate-500 font-bold mt-1 mr-3.5 italic">إدارة وفلترة جميع الأسئلة عبر كافة الامتحانات والقنوات التعليمية.</p>
+        </div>
+        
+        <div class="flex items-center gap-3">
+           <div class="px-6 py-3 bg-white rounded-xl border border-slate-100 shadow-sm flex items-center gap-3">
+             <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">إجمالي الأسئلة</span>
+             <span class="text-blue-600 font-black text-lg">{{ questions().length }}</span>
+           </div>
+        </div>
+      </div>
+
+      <!-- Filters Panel -->
+      <div class="bg-white p-6 rounded-[40px] shadow-sm border border-slate-100 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="relative group">
+          <input 
+            type="text" 
+            [(ngModel)]="searchQuery"
+            (ngModelChange)="onFilterChange()"
+            placeholder="بحث في نص السؤال..."
+            class="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 px-12 text-sm font-bold focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all"
+          >
+          <app-icon name="search" [size]="18" className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-500 transition-colors"></app-icon>
+        </div>
+
+        <div class="relative group">
+          <select 
+            [(ngModel)]="selectedGrade"
+            (ngModelChange)="onFilterChange()"
+            class="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold focus:border-blue-500 outline-none transition-all cursor-pointer appearance-none"
+          >
+            <option value="">كل السنوات الدراسية</option>
+            <option value="1sec">الصف الأول الثانوي</option>
+            <option value="2sec">الصف الثاني الثانوي</option>
+            <option value="3sec">الصف الثالث الثانوي</option>
+          </select>
+          <app-icon name="chevron-down" [size]="14" className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none"></app-icon>
+        </div>
+
+        <div class="relative group">
+          <select 
+            [(ngModel)]="selectedExam"
+            (ngModelChange)="onFilterChange()"
+            class="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold focus:border-blue-500 outline-none transition-all cursor-pointer appearance-none"
+          >
+            <option value="">كل الامتحانات</option>
+            <option *ngFor="let ex of uniqueExams()" [value]="ex.id">{{ ex.title }}</option>
+          </select>
+          <app-icon name="chevron-down" [size]="14" className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none"></app-icon>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <div *ngIf="loading()" class="py-24 flex flex-col items-center justify-center gap-4">
+        <div class="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+        <p class="text-blue-600 font-black italic animate-pulse tracking-widest uppercase text-[10px]">جاري مزامنة بنك الأسئلة...</p>
+      </div>
+
+      <div *ngIf="!loading() && filteredQuestions().length === 0" class="py-32 bg-slate-50/30 rounded-[40px] border-4 border-dashed border-slate-100 flex flex-col items-center justify-center text-center">
+        <div class="w-20 h-20 bg-white rounded-full shadow-lg flex items-center justify-center text-slate-300 mb-6 border border-slate-50">
+           <app-icon name="search-x" [size]="40" className="opacity-20"></app-icon>
+        </div>
+        <h3 class="text-xl font-black text-slate-800 italic">طريق مسدود!</h3>
+        <p class="text-slate-400 font-bold mt-1">لم نجد أسئلة تطابق المعايير المحددة.</p>
+        <button (click)="resetFilters()" class="mt-8 bg-slate-900 text-white px-8 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:-translate-y-1 transition-all shadow-xl shadow-slate-900/10 active:scale-95">إعادة ضبط الفلاتر</button>
+      </div>
+
+      <div *ngIf="!loading() && filteredQuestions().length > 0" class="grid grid-cols-1 gap-6">
+        <div 
+          *ngFor="let q of filteredQuestions()" 
+          class="bg-white rounded-[40px] border border-slate-100 p-8 shadow-sm hover:shadow-2xl hover:shadow-blue-500/5 transition-all group relative overflow-hidden"
+        >
+          <div class="flex flex-col md:flex-row justify-between gap-6">
+            <div class="flex-1 space-y-6">
+              <div class="flex items-center gap-3">
+                <span class="px-4 py-1.5 bg-blue-50 text-blue-600 text-[10px] font-black rounded-xl border border-blue-100 shadow-sm uppercase italic">
+                  {{ q.grade }}
+                </span>
+                <span class="px-3 py-1 bg-slate-50 text-slate-500 text-[10px] font-bold rounded-lg border border-slate-100">
+                  {{ q.examTitle }}
+                </span>
+                <span class="text-slate-300 text-[9px] font-black font-mono ml-auto">REF #{{ q.id }}</span>
+              </div>
+              
+              <h3 class="text-xl font-black text-slate-800 leading-relaxed italic">
+                {{ q.text }}
+              </h3>
+
+              <div *ngIf="q.imageUrl" class="rounded-3xl overflow-hidden border-4 border-slate-50 shadow-inner max-w-md bg-slate-50 group/img relative">
+                 <img [src]="q.imageUrl" alt="Question" class="w-full h-auto object-contain transition-transform duration-700 group-hover/img:scale-105">
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div 
+                  *ngFor="let choice of q.choices; let i = index" 
+                  [class.bg-emerald-50]="i === q.correctIndex"
+                  [class.border-emerald-200]="i === q.correctIndex"
+                  [class.text-emerald-700]="i === q.correctIndex"
+                  [class.bg-slate-50]="i !== q.correctIndex"
+                  class="flex items-center gap-4 px-6 py-3.5 rounded-2xl text-sm font-bold border-2 border-transparent transition-all"
+                >
+                  <div class="w-2.5 h-2.5 rounded-full" [class.bg-emerald-500]="i === q.correctIndex" [class.bg-slate-200]="i !== q.correctIndex" [class.shadow-[0_0_8px_rgba(16,185,129,0.5)]]="i === q.correctIndex"></div>
+                  {{ choice }}
+                </div>
+              </div>
+
+              <div *ngIf="q.explanation" class="p-6 bg-amber-50/50 border border-amber-100 rounded-3xl flex items-start gap-4">
+                <div class="w-10 h-10 bg-white rounded-2xl flex items-center justify-center text-amber-500 shadow-sm shrink-0">
+                  <app-icon name="info" [size]="18"></app-icon>
+                </div>
+                <div>
+                   <p class="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-1">توضيح الحل</p>
+                   <p class="text-xs font-bold text-slate-600 italic leading-relaxed">{{ q.explanation }}</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex md:flex-col gap-2 shrink-0">
+              <button 
+                (click)="editQuestion(q)"
+                class="flex-1 md:flex-none w-14 h-14 bg-white border border-slate-100 rounded-2xl flex items-center justify-center text-slate-400 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all shadow-sm group/btn"
+                title="تعديل في الامتحان"
+              >
+                <app-icon name="external-link" [size]="20" className="transition-transform group-hover/btn:rotate-12"></app-icon>
+              </button>
+               <button 
+                (click)="viewExamReport(q.examId)"
+                class="flex-1 md:flex-none w-14 h-14 bg-white border border-slate-100 rounded-2xl flex items-center justify-center text-slate-400 hover:bg-slate-900 hover:text-white transition-all shadow-sm group/btn"
+                title="مشاهدة تقرير الامتحان"
+              >
+                <app-icon name="bar-chart-3" [size]="20" className="transition-transform group-hover/btn:scale-110"></app-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  

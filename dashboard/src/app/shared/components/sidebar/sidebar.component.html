@@ -1,0 +1,75 @@
+
+    <div class="flex flex-col h-full bg-slate-50/80 border-l border-slate-200 font-sans overflow-hidden shadow-2xl shadow-slate-200/50">
+      <!-- Logo Section: Premium High-Fidelity -->
+      <div class="p-8 border-b border-slate-200/60 flex items-center gap-4 bg-slate-50/90 backdrop-blur-md sticky top-0 z-20">
+        <div class="relative group cursor-pointer">
+          <div class="bg-blue-600 w-12 h-12 rounded-[1.25rem] flex items-center justify-center shrink-0 shadow-xl shadow-blue-500/30 rotate-6 group-hover:rotate-0 transition-transform duration-500">
+            <span class="text-white font-black text-2xl italic uppercase tracking-tighter -rotate-6 group-hover:rotate-0 transition-transform duration-500">M</span>
+          </div>
+          <div class="absolute -right-1 -bottom-1 w-5 h-5 bg-emerald-500 border-4 border-slate-50 rounded-full"></div>
+        </div>
+        <div>
+          <h1 class="text-base font-black text-slate-900 tracking-tighter leading-none italic uppercase">محمد سامي</h1>
+          <p class="text-[9px] text-blue-600 font-black uppercase tracking-[0.2em] mt-1.5 opacity-80">Smart System v1.0</p>
+        </div>
+      </div>
+
+      <!-- Navigation Groups -->
+      <nav class="flex-1 overflow-y-auto py-4 space-y-4 scrollbar-hide relative">
+        <div *ngFor="let group of filteredNavGroups()" class="space-y-0">
+           <!-- Group Header (Sticky and Clickable for Accordion) -->
+           <h3 (click)="toggleGroup(group.groupName)" class="px-8 py-3 sticky top-0 z-10 bg-slate-50/95 backdrop-blur-md text-[11px] font-black uppercase tracking-widest flex items-center gap-3 cursor-pointer group transition-colors">
+             <span class="w-1.5 h-1.5 rounded-full transition-colors" [ngClass]="isGroupExpanded(group.groupName) ? 'bg-blue-600' : 'bg-slate-400'"></span>
+             <span class="flex-1 transition-colors" [ngClass]="isGroupExpanded(group.groupName) ? 'text-slate-900' : 'text-slate-500 group-hover:text-slate-700'">{{ group.groupName }}</span>
+             <app-icon name="chevron-down" [size]="14" class="text-slate-400 transition-transform duration-300" [ngClass]="isGroupExpanded(group.groupName) ? 'rotate-0' : 'rotate-90'"></app-icon>
+           </h3>
+           
+           <!-- Group Items (Collapsible) -->
+           <div class="px-6 space-y-1.5 overflow-hidden transition-all duration-300" [ngClass]="isGroupExpanded(group.groupName) ? 'max-h-[1000px] opacity-100 py-2' : 'max-h-0 opacity-0 py-0'">
+             <ng-container *ngFor="let item of group.items">
+               <a
+                 [routerLink]="item.route"
+                 routerLinkActive="active bg-slate-900 text-white shadow-xl shadow-slate-900/20 font-black ring-1 ring-slate-800"
+                 [routerLinkActiveOptions]="{ exact: true }"
+                 (click)="closeSidebar()"
+                 (contextmenu)="onRightClick($event, item.route)"
+                 class="flex items-center px-5 py-3.5 text-slate-500 rounded-2xl transition-all duration-300 group border border-transparent [&:not(.active)]:hover:bg-white [&:not(.active)]:hover:text-slate-900 [&:not(.active)]:hover:shadow-sm [&:not(.active)]:hover:border-slate-200/60"
+               >
+                 <div class="w-8 h-8 rounded-xl bg-slate-100 group-[&:not(.active)]:group-hover:bg-blue-50 group-[&:not(.active)]:group-hover:text-blue-600 flex items-center justify-center transition-colors ml-3 group-[.active]:bg-white/10 group-[.active]:text-white">
+                    <app-icon [name]="item.icon" [size]="18" className="transition-transform group-[&:not(.active)]:group-hover:scale-110 group-[&:not(.active)]:group-hover:rotate-6"></app-icon>
+                 </div>
+                 <span class="text-sm font-bold tracking-tight">{{ item.label }}</span>
+                 
+                 <!-- Indicators -->
+                 <div *ngIf="item.label === 'الإشعارات'" class="mr-auto flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 bg-red-500 rounded-full animate-ping"></span>
+                    <span class="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+                 </div>
+                 <app-icon name="chevron-left" [size]="12" className="mr-auto opacity-0 -translate-x-2 group-[&:not(.active)]:group-hover:opacity-100 group-[&:not(.active)]:group-hover:translate-x-0 group-[.active]:opacity-100 group-[.active]:translate-x-0 transition-all"></app-icon>
+               </a>
+             </ng-container>
+           </div>
+        </div>
+      </nav>
+
+      <!-- Bottom Profile / Logout -->
+      <div class="p-8 border-t border-slate-200/60 mt-auto bg-slate-100/30">
+        <div class="flex items-center gap-4 mb-6 px-2">
+           <div class="w-10 h-10 rounded-full bg-white border border-slate-200 shadow-sm flex items-center justify-center text-slate-400">
+              <app-icon name="user" [size]="20"></app-icon>
+           </div>
+           <div>
+              <p class="text-xs font-black text-slate-800 tracking-tight leading-none uppercase">{{ getRoleLabel(currentUserRole()) }}</p>
+              <p class="text-[9px] text-slate-400 font-bold mt-1.5 tracking-widest uppercase">تطوير إتقان كود</p>
+           </div>
+        </div>
+        <button
+          (click)="logout()"
+          class="w-full flex items-center justify-center gap-3 px-4 py-3.5 bg-white border-2 border-rose-100 text-rose-600 hover:bg-rose-50 hover:border-rose-200 rounded-2xl transition-all font-black text-[11px] uppercase tracking-widest shadow-sm active:scale-95"
+        >
+          <app-icon name="log-out" [size]="16" className="text-rose-500"></app-icon>
+          <span>تسجيل الخروج</span>
+        </button>
+      </div>
+    </div>
+  

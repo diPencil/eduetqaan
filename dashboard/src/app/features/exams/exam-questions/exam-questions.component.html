@@ -1,0 +1,243 @@
+
+    <div class="space-y-4 font-sans mb-10" dir="rtl">
+      <!-- Compact Header Section -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="p-5 md:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-br from-white to-slate-50/50">
+          <div class="flex items-center gap-4">
+            <button routerLink="/exams" class="w-10 h-10 bg-white rounded-xl shadow-sm border border-slate-100 flex items-center justify-center text-lg hover:bg-slate-50 transition-all group">
+              <app-icon name="arrow-left" [size]="18" className="group-hover:-translate-x-1 transition-transform"></app-icon>
+            </button>
+            <div>
+              <div class="flex flex-wrap items-center gap-2 mb-1">
+                <h1 class="text-xl font-black text-slate-800 tracking-tight">{{ exam()?.title }}</h1>
+                <span class="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-[9px] font-black border border-blue-100 uppercase tracking-widest">{{ exam()?.grade }}</span>
+                <span class="px-2 py-0.5 bg-amber-50 text-amber-600 rounded text-[9px] font-black border border-amber-100 uppercase flex items-center gap-1 group">
+                  <app-icon name="clock" [size]="10"></app-icon>
+                  {{ exam()?.durationMin }} دقيقة
+                </span>
+              </div>
+              <p class="text-slate-500 font-bold text-xs">{{ exam()?.description || 'لا يوجد وصف متاح لهذا الامتحان' }}</p>
+            </div>
+          </div>
+          
+          <div class="flex flex-wrap items-center gap-3">
+            <div class="flex gap-2 ml-2">
+              <div class="text-center px-3 py-1.5 bg-white rounded-xl border border-slate-100 shadow-sm min-w-[60px]">
+                <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">الأسئلة</p>
+                <p class="text-lg font-black text-slate-800">{{ questions().length }}</p>
+              </div>
+              <div class="text-center px-3 py-1.5 bg-white rounded-xl border border-slate-100 shadow-sm min-w-[60px]">
+                <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">الدرجة</p>
+                <p class="text-lg font-black text-indigo-600">{{ getTotalPoints() }}</p>
+              </div>
+            </div>
+            
+            <button (click)="openAddModal()" class="bg-slate-900 text-white px-6 py-3 rounded-xl font-black shadow-xl shadow-slate-200 hover:bg-slate-800 transition-all flex items-center gap-2 text-sm group">
+              <app-icon name="plus" [size]="20" className="group-hover:scale-110 transition-transform"></app-icon>
+              إضافة سؤال
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filters & Search -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 flex items-center gap-4">
+        <div class="flex-1 relative">
+          <input
+            type="text"
+            placeholder="بحث في الأسئلة..."
+            [(ngModel)]="questionSearch"
+            class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-10 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-bold"
+          />
+          <app-icon name="search" [size]="18" className="absolute right-3 top-3 text-slate-400"></app-icon>
+        </div>
+      </div>
+
+      <!-- Questions List -->
+      <div class="grid grid-cols-1 gap-4">
+        <div *ngFor="let q of filteredQuestions(); let i = index" class="bg-white border border-slate-100 rounded-2xl p-5 hover:shadow-lg hover:shadow-slate-100 transition-all group relative">
+          <div class="flex justify-between items-start mb-4">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="w-8 h-8 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center font-black text-slate-400 italic text-sm">#{{ i+1 }}</span>
+              <span class="px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded text-[9px] font-black border border-indigo-100 uppercase tracking-widest">
+                {{ (q.choices && q.choices.length === 2) ? 'صح أو خطأ' : 'اختياري (MCQ)' }}
+              </span>
+              <span class="px-2 py-0.5 bg-slate-50 text-slate-500 rounded text-[9px] font-black border border-slate-100 uppercase tracking-widest flex items-center gap-1 group">
+                <app-icon name="target" [size]="10"></app-icon>
+                {{ q.points }} نقطة
+              </span>
+            </div>
+            <div class="flex gap-1.5">
+              <button (click)="onEdit(q)" class="w-8 h-8 flex items-center justify-center text-blue-500 hover:bg-blue-50 rounded-lg transition-all hover:scale-110" title="تعديل">
+                <app-icon name="edit" [size]="16"></app-icon>
+              </button>
+              <button (click)="onDelete(q.id)" class="w-8 h-8 flex items-center justify-center text-rose-500 hover:bg-rose-50 rounded-lg transition-all hover:scale-110" title="حذف">
+                <app-icon name="trash" [size]="16"></app-icon>
+              </button>
+            </div>
+          </div>
+          
+          <p class="text-lg font-black text-slate-800 mb-5 leading-snug">{{ q.text }}</p>
+          
+          <!-- MCQ Options (Compact) -->
+          <div *ngIf="q.choices && q.choices.length > 2" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div *ngFor="let opt of q.choices; let optIdx = index" 
+                 class="p-3.5 rounded-xl border-2 flex items-center gap-3 transition-all"
+                 [ngClass]="optIdx === q.correctIndex ? 'bg-emerald-50/50 border-emerald-500 text-emerald-800 shadow-sm' : 'bg-slate-50/50 border-transparent text-slate-500'">
+              <span class="w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-black"
+                    [ngClass]="optIdx === q.correctIndex ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-400'">{{ ['أ', 'ب', 'ج', 'د'][optIdx] || optIdx + 1 }}</span>
+              <span class="font-bold text-sm">{{ opt }}</span>
+              <app-icon *ngIf="optIdx === q.correctIndex" name="check" [size]="16" className="mr-auto text-emerald-500"></app-icon>
+            </div>
+          </div>
+
+          <!-- True/False (Compact) -->
+          <div *ngIf="q.choices && q.choices.length === 2" class="flex gap-4">
+            <div class="px-6 py-3 rounded-xl border-2 flex items-center gap-2 font-black transition-all text-sm"
+                 [ngClass]="q.correctIndex === 0 ? 'bg-emerald-50/50 border-emerald-500 text-emerald-800 shadow-sm' : 'bg-slate-50/50 border-transparent text-slate-300 opacity-50'">
+              <span>صح</span> 
+              <app-icon *ngIf="q.correctIndex === 0" name="check" [size]="16"></app-icon>
+            </div>
+            <div class="px-6 py-3 rounded-xl border-2 flex items-center gap-2 font-black transition-all text-sm"
+                 [ngClass]="q.correctIndex === 1 ? 'bg-emerald-50/50 border-emerald-500 text-emerald-800 shadow-sm' : 'bg-slate-50/50 border-transparent text-slate-300 opacity-50'">
+              <span>خطأ</span>
+              <app-icon *ngIf="q.correctIndex === 1" name="check" [size]="16"></app-icon>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty State (Compact) -->
+        <div *ngIf="!filteredQuestions().length" class="py-20 text-center bg-white rounded-3xl border-2 border-dashed border-slate-100">
+           <app-icon name="book" [size]="48" className="opacity-20 mb-4"></app-icon>
+           <p class="text-slate-400 font-black text-lg">لا توجد أسئلة مضافة</p>
+           <p class="text-slate-300 mt-1 text-sm font-bold">ابدأ بإضافة أول سؤال لهذا الامتحان</p>
+        </div>
+      </div>
+
+      <div *ngIf="isModalOpen()" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden animate-in zoom-in duration-300 border border-white/20 flex flex-col max-h-[90vh]">
+           <div class="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/30">
+             <div>
+               <h3 class="text-xl font-black text-slate-800 tracking-tight">{{ isEditing() ? 'تعديل السؤال' : 'إضافة سؤال جديد' }}</h3>
+               <p class="text-[10px] text-slate-400 font-bold mt-0.5">الامتحان: {{ exam()?.title }}</p>
+             </div>
+             <button (click)="closeModal()" class="w-8 h-8 bg-white shadow-sm border border-slate-100 text-slate-400 rounded-full flex items-center justify-center hover:bg-rose-50 hover:text-rose-500 transition-all">
+                <app-icon name="x" [size]="14"></app-icon>
+             </button>
+           </div>
+           
+           <div class="p-6 space-y-6 overflow-y-auto custom-scrollbar flex-1 font-sans">
+             <div class="space-y-3">
+               <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">نوع السؤال</label>
+               <div class="flex gap-3 p-1 bg-slate-100 rounded-xl">
+                 <button (click)="questionForm.type = 'mcq'" 
+                         [ngClass]="questionForm.type === 'mcq' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500'"
+                         class="flex-1 py-2.5 rounded-lg font-black transition-all text-xs">الاختياري (MCQ)</button>
+                 <button (click)="questionForm.type = 'true_false'" 
+                         [ngClass]="questionForm.type === 'true_false' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500'"
+                         class="flex-1 py-2.5 rounded-lg font-black transition-all text-xs">صح أو خطأ</button>
+               </div>
+             </div>
+
+             <div class="space-y-2">
+               <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">نص السؤال *</label>
+               <textarea [(ngModel)]="questionForm.text" rows="3" class="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 text-slate-800 font-black text-base transition-all outline-none" placeholder="اكتب السؤال هنا..."></textarea>
+             </div>
+
+             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+               <div class="space-y-2">
+                 <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">درجة السؤال</label>
+                 <div class="relative">
+                   <input type="number" [(ngModel)]="questionForm.points" class="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 font-black text-blue-600 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all text-sm">
+                   <span class="absolute left-4 top-3 text-slate-300 font-bold text-xs">نقاط</span>
+                 </div>
+               </div>
+             </div>
+
+             <!-- Compact Options Form -->
+             <div *ngIf="questionForm.type === 'mcq'" class="space-y-3 border-t border-slate-100 pt-6 animate-in slide-in-from-bottom duration-300">
+                <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">الخيارات الأربعة</label>
+                <div class="grid grid-cols-1 gap-3">
+                  <div *ngFor="let opt of [0,1,2,3]; let i = index" class="flex gap-3 items-center group">
+                     <button (click)="questionForm.correctIndex = i" 
+                             [ngClass]="questionForm.correctIndex === i ? 'bg-emerald-500 text-white border-emerald-500 shadow-lg' : 'bg-white text-slate-300 border-slate-200'"
+                             class="w-10 h-10 rounded-xl border-2 font-black flex items-center justify-center transition-all text-base shrink-0">{{ ['أ', 'ب', 'ج', 'د'][i] }}</button>
+                     <input type="text" [(ngModel)]="questionForm.options[i]" 
+                            class="flex-1 bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm font-bold focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none" 
+                            [placeholder]="'الخيار ' + (i+1)">
+                  </div>
+                </div>
+             </div>
+
+             <!-- Compact True/False -->
+             <div *ngIf="questionForm.type === 'true_false'" class="space-y-3 border-t border-slate-100 pt-6 animate-in slide-in-from-bottom duration-300">
+                <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">الإجابة الصحيحة</label>
+                <div class="flex gap-4">
+                  <button (click)="questionForm.isTrue = true" 
+                          [ngClass]="questionForm.isTrue === true ? 'bg-emerald-500 text-white border-emerald-500 shadow-lg' : 'bg-slate-100 text-slate-500'"
+                          class="flex-1 py-3.5 rounded-xl font-black transition-all text-base flex items-center justify-center gap-2">
+                    صح <app-icon name="check" [size]="20" *ngIf="questionForm.isTrue === true"></app-icon>
+                  </button>
+                  <button (click)="questionForm.isTrue = false" 
+                          [ngClass]="questionForm.isTrue === false ? 'bg-emerald-500 text-white border-emerald-500 shadow-lg' : 'bg-slate-100 text-slate-500'"
+                          class="flex-1 py-3.5 rounded-xl font-black transition-all text-base flex items-center justify-center gap-2">
+                    خطأ <app-icon name="error" [size]="20" *ngIf="questionForm.isTrue === false"></app-icon>
+                  </button>
+                </div>
+             </div>
+           </div>
+
+           <div class="p-6 bg-slate-50/50 border-t border-slate-100 flex flex-col sm:flex-row justify-end gap-2 shrink-0 font-sans">
+             <button (click)="closeModal()" class="px-6 py-3 font-black text-slate-400 hover:text-slate-600 transition-colors text-sm">إلغاء</button>
+             
+             <div class="flex gap-3">
+               <button (click)="onSave(true)" [disabled]="isSaving()" class="bg-white border-2 border-slate-200 text-slate-700 px-6 py-3 rounded-xl font-black hover:bg-slate-50 transition-all text-xs flex items-center justify-center gap-2">
+                 <span>حفظ وأضف آخر</span>
+               </button>
+               <button (click)="onSave(false)" [disabled]="isSaving()" class="bg-blue-600 text-white px-8 py-3 rounded-xl font-black shadow-xl shadow-blue-500/30 hover:bg-blue-700 transition-all text-sm flex items-center justify-center gap-2">
+                 <app-icon name="loader" [size]="16" className="animate-spin" *ngIf="isSaving()"></app-icon>
+                 <span>{{ isEditing() ? 'تحديث السؤال' : 'حفظ وإغلاق' }}</span>
+               </button>
+             </div>
+           </div>
+        </div>
+      </div>
+
+      <!-- Compact Delete Confirmation Modal -->
+      <div *ngIf="isDeleteModalOpen()" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in duration-300 border border-white/20">
+          <div class="p-6 text-center font-sans">
+            <div class="w-16 h-16 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner">
+              <app-icon name="alert" [size]="32"></app-icon>
+            </div>
+            <h3 class="text-xl font-black text-slate-800 mb-1">تأكيد الحذف</h3>
+            <p class="text-slate-500 font-bold text-xs leading-relaxed">هل أنت متأكد من حذف هذا السؤال؟<br>لا يمكن التراجع عن هذا الإجراء.</p>
+          </div>
+          
+          <div class="p-4 bg-slate-50/50 flex gap-3">
+            <button (click)="closeDeleteModal()" class="flex-1 py-3 rounded-xl font-black text-slate-500 hover:bg-white hover:shadow-sm transition-all border border-transparent hover:border-slate-200 text-sm font-sans">
+              إلغاء
+            </button>
+            <button (click)="confirmDelete()" class="flex-1 py-3 bg-rose-600 text-white rounded-xl font-black shadow-lg shadow-rose-500/30 hover:bg-rose-700 transition-all text-sm font-sans">
+              نعم، حذف
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Compact Status Feedback -->
+      <div *ngIf="statusModal()" class="fixed top-10 left-1/2 -translate-x-1/2 z-[200] animate-in slide-in-from-top duration-500">
+        <div 
+          class="flex items-center gap-3 px-6 py-3 rounded-full shadow-2xl backdrop-blur-xl border border-white/20"
+          [ngClass]="{
+            'bg-emerald-500/90 text-white': statusType() === 'success',
+            'bg-rose-500/90 text-white': statusType() === 'error'
+          }"
+        >
+          <app-icon [name]="statusType() === 'success' ? 'check' : 'error'" [size]="20"></app-icon>
+          <span class="font-black text-base tracking-tight whitespace-pre-line font-sans">{{ statusMessage() }}</span>
+        </div>
+      </div>
+
+    </div>
+  

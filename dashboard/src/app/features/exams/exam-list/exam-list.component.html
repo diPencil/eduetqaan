@@ -1,0 +1,251 @@
+
+    <div class="space-y-6 font-sans" dir="rtl">
+      <!-- Page Header -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="flex items-center gap-4">
+          <div class="w-1.5 h-10 bg-blue-600 rounded-full"></div>
+          <div>
+            <h1 class="text-2xl font-black text-slate-800 tracking-tight italic">إدارة الامتحانات</h1>
+            <p class="text-slate-500 font-bold text-xs">إنشاء وتصحيح الامتحانات، ومتابعة أداء الطلاب.</p>
+          </div>
+        </div>
+        <button (click)="openAddModal()" class="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold flex items-center shadow-lg shadow-indigo-500/20 hover:bg-indigo-700 transition-all">
+          <app-icon name="plus" [size]="20" className="ml-2"></app-icon>
+          إضافة امتحان جديد
+        </button>
+      </div>
+
+      <!-- Filters Toolbar -->
+      <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-wrap items-center gap-4">
+        <div class="flex-1 min-w-[300px] relative">
+          <input
+            type="text"
+            placeholder="بحث عن امتحان..."
+            [(ngModel)]="searchQuery"
+            (input)="onSearch()"
+            class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-10 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+          />
+          <app-icon name="search" [size]="18" className="absolute right-3 top-3 text-slate-400"></app-icon>
+        </div>
+        
+        <select 
+          [(ngModel)]="selectedGrade"
+          (change)="loadExams()"
+          class="bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        >
+          <option value="">كل المراحل</option>
+          <option value="الصف الاول الثانوي">الصف الأول الثانوي</option>
+          <option value="الصف الثاني الثانوي">الصف الثاني الثانوي</option>
+          <option value="الصف الثالث الثانوي">الصف الثالث الثانوي</option>
+        </select>
+
+        <select 
+          [(ngModel)]="selectedStatus"
+          (change)="loadExams()"
+          class="bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        >
+          <option value="">كل الحالات</option>
+          <option value="published">منشور</option>
+          <option value="draft">مسودة</option>
+        </select>
+
+        <button (click)="loadExams()" class="p-2.5 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition-colors">
+          <app-icon name="refresh" [size]="18"></app-icon>
+        </button>
+      </div>
+
+      <!-- Exams Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div *ngFor="let e of exams()" class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden group hover:shadow-xl transition-all duration-300">
+          <div class="p-6">
+            <div class="flex items-center justify-between mb-4">
+              <span class="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-[10px] font-black uppercase border border-indigo-100">
+                {{ e.grade }}
+              </span>
+              <span 
+                class="px-2 py-1 rounded-md text-[10px] font-bold"
+                [ngClass]="{
+                  'bg-emerald-100 text-emerald-600': e.status === 'published',
+                  'bg-amber-100 text-amber-600': e.status === 'draft'
+                }"
+              >
+                {{ e.status === 'published' ? 'منشور' : 'مسودة' }}
+              </span>
+            </div>
+            
+            <h3 class="text-lg font-black text-slate-800 mb-2 truncate group-hover:text-indigo-600 transition-colors">{{ e.title }}</h3>
+            <p class="text-sm text-slate-400 line-clamp-2 min-h-[40px] mb-4">{{ e.description || 'لا يوجد وصف لهذا الامتحان.' }}</p>
+            
+            <div class="flex items-center gap-4 text-xs font-bold text-slate-500 mb-6">
+              <span class="flex items-center gap-1"><app-icon name="clock" [size]="14"></app-icon> {{ e.durationMin }} دقيقة</span>
+              <span class="flex items-center gap-1"><app-icon name="questions" [size]="14"></app-icon> {{ e.questionsCount || 0 }} سؤال</span>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2">
+              <button [routerLink]="['/exams', e.id, 'questions']" class="col-span-2 py-2.5 bg-indigo-600 text-white rounded-xl font-bold text-xs hover:bg-indigo-700 transition-all shadow-md shadow-indigo-500/20">
+                إدارة الأسئلة
+              </button>
+              <button (click)="openEditModal(e)" class="p-2.5 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition-colors text-xs flex items-center justify-center">
+                <app-icon name="edit" [size]="16"></app-icon>
+              </button>
+              
+              <button [routerLink]="['/exams', e.id, 'report']" class="col-span-full py-2.5 bg-slate-900 text-white rounded-xl font-bold text-xs hover:bg-indigo-600 transition-all shadow-md mt-2 flex items-center justify-center gap-2">
+                <app-icon name="chart" [size]="16"></app-icon>
+                عرض النتائج والتقارير
+              </button>
+
+              <button (click)="onDelete(e.id)" class="col-span-full py-2 bg-red-50 text-red-600 rounded-lg text-[10px] font-bold hover:bg-red-600 hover:text-white transition-all mt-2 uppercase">
+                حذف الامتحان
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="!exams().length && !isLoading()" class="col-span-full py-20 bg-white rounded-3xl border border-dashed border-slate-200 flex flex-col items-center">
+          <app-icon name="book" [size]="48" className="opacity-20 mb-4"></app-icon>
+          <p class="text-slate-400 font-bold text-xl">لم يتم العثور على امتحانات</p>
+          <button (click)="openAddModal()" class="mt-4 text-indigo-600 font-black hover:underline">أضف أول امتحان الآن</button>
+        </div>
+        
+        <!-- Loading -->
+        <div *ngIf="isLoading()" class="col-span-full text-center py-10 text-slate-400 font-bold animate-pulse">
+          جاري تحميل الامتحانات...
+        </div>
+      </div>
+
+      <!-- Add/Edit Modal (Optimized) -->
+      <div *ngIf="isModalOpen()" class="fixed inset-0 z-50 flex items-center justify-center p-2 md:p-4 bg-slate-900/60 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl md:rounded-3xl shadow-2xl w-full max-w-xl max-h-[95vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
+          <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <h3 class="text-lg md:text-xl font-black text-slate-800 tracking-tight italic">
+               {{ isEditing() ? 'تعديل بيانات الامتحان' : 'إضافة امتحان جديد' }}
+            </h3>
+            <button (click)="closeModal()" class="w-8 h-8 flex items-center justify-center text-slate-400 hover:bg-rose-50 hover:text-rose-500 rounded-full transition-all">
+               <app-icon name="x" [size]="14"></app-icon>
+            </button>
+          </div>
+          
+          <form (ngSubmit)="onSubmit()" #examF="ngForm" class="p-5 md:p-6 space-y-5 overflow-y-auto custom-scrollbar flex-1">
+            <div class="space-y-1.5">
+              <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">عنوان الامتحان *</label>
+              <input type="text" name="title" [(ngModel)]="examForm.title" required 
+                class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-bold text-slate-800 text-sm">
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div class="space-y-1.5">
+                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">المرحلة</label>
+                <select name="grade" [(ngModel)]="examForm.grade" required 
+                  class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 focus:ring-2 focus:ring-indigo-500 transition-all font-bold text-xs">
+                  <option value="الصف الاول الثانوي">1 ثانوي</option>
+                  <option value="الصف الثاني الثانوي">2 ثانوي</option>
+                  <option value="الصف الثالث الثانوي">3 ثانوي</option>
+                </select>
+              </div>
+              <div class="space-y-1.5">
+                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">الحالة</label>
+                <select name="status" [(ngModel)]="examForm.status" required 
+                  class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 focus:ring-2 focus:ring-indigo-500 transition-all font-bold text-xs">
+                  <option value="published">منشور</option>
+                  <option value="draft">مسودة</option>
+                </select>
+              </div>
+              <div class="space-y-1.5">
+                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">المدة (دقيقة)</label>
+                <input type="number" name="durationMin" [(ngModel)]="examForm.durationMin" required 
+                  class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 focus:ring-2 focus:ring-indigo-500 transition-all font-bold text-xs">
+              </div>
+            </div>
+
+            <div class="space-y-1.5">
+              <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">الوصف</label>
+              <textarea name="description" [(ngModel)]="examForm.description" rows="1" 
+                class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-4 focus:ring-2 focus:ring-indigo-500 transition-all text-sm font-medium"></textarea>
+            </div>
+
+            <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-4">
+              <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-200 pb-2 flex items-center gap-2">
+                 <app-icon name="link" [size]="12"></app-icon>
+                 الربط والوصول
+              </h4>
+              
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="space-y-1.5">
+                  <label class="text-[10px] font-black text-slate-500">الكورس</label>
+                  <select name="courseId" [(ngModel)]="examForm.courseId" (change)="onCourseChange()" 
+                    class="w-full bg-white border border-slate-200 rounded-xl py-2 px-3 text-xs focus:ring-2 focus:ring-indigo-500 transition-all font-bold">
+                    <option [ngValue]="null">بدون كورس</option>
+                    <option *ngFor="let c of courses()" [ngValue]="c.id">{{ c.title }}</option>
+                  </select>
+                </div>
+                <div class="space-y-1.5">
+                  <label class="text-[10px] font-black text-slate-500">المحاضرة</label>
+                  <select name="lessonId" [(ngModel)]="examForm.lessonId" [disabled]="!examForm.courseId" 
+                    class="w-full bg-white border border-slate-200 rounded-xl py-2 px-3 text-xs focus:ring-2 focus:ring-indigo-500 transition-all font-bold disabled:opacity-40">
+                    <option [ngValue]="null">بدون محاضرة</option>
+                    <option *ngFor="let l of lessons()" [ngValue]="l.id">{{ l.title }}</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between bg-white/50 p-3 rounded-xl border border-slate-100">
+                <div class="flex flex-col">
+                  <label class="text-xs font-black text-slate-700">إتاحة مجانية</label>
+                  <p class="text-[9px] text-slate-400 font-bold">متاح لجميع الطلاب دون اشتراك.</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" name="isFree" [(ngModel)]="examForm.isFree" class="sr-only peer">
+                  <div class="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:-translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:right-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+                </label>
+              </div>
+            </div>
+
+            <div class="p-5 md:p-6 bg-slate-50/50 border-t border-slate-100 flex items-center justify-end gap-3 mt-auto">
+              <button type="button" (click)="closeModal()" class="px-6 py-3 rounded-xl font-bold text-slate-500 hover:bg-slate-100 transition-all text-sm">إلغاء</button>
+              <button type="submit" [disabled]="!examF.form.valid || isSaving()" class="bg-indigo-600 text-white px-10 py-3 rounded-xl font-bold shadow-lg shadow-indigo-500/20 hover:bg-indigo-700 transition-all disabled:opacity-50 flex items-center text-sm">
+                <app-icon *ngIf="isSaving()" name="refresh-cw" [size]="18" className="animate-spin ml-2"></app-icon>
+                {{ isEditing() ? 'حفظ التعديلات' : 'إضافة الامتحان' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+      <!-- Premium Delete Confirmation Modal -->
+      <div *ngIf="isDeleteModalOpen()" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+        <div class="bg-white rounded-[32px] shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in duration-300 border border-slate-100">
+          <div class="p-8 text-center">
+            <div class="w-20 h-20 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+              <app-icon name="alert" [size]="32"></app-icon>
+            </div>
+            <h3 class="text-2xl font-black text-slate-800 mb-2">تأكيد الحذف</h3>
+            <p class="text-slate-500 font-medium font-bold">هل أنت متأكد من حذف هذا الامتحان؟<br>لا يمكن التراجع عن هذا الإجراء.</p>
+          </div>
+          
+          <div class="p-6 bg-slate-50/50 flex gap-4">
+            <button (click)="closeDeleteModal()" class="flex-1 py-4 rounded-2xl font-black text-slate-500 hover:bg-white hover:shadow-sm transition-all border border-transparent hover:border-slate-200">
+              إلغاء
+            </button>
+            <button (click)="confirmDelete()" class="flex-1 py-4 bg-rose-600 text-white rounded-2xl font-black shadow-lg shadow-rose-500/30 hover:bg-rose-700 transition-all">
+              نعم، حذف الآن
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Status Modal (Premium Feedback) -->
+      <div *ngIf="statusModal()" class="fixed top-10 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-top duration-500">
+        <div 
+          class="flex items-center gap-4 px-8 py-5 rounded-[30px] shadow-2xl backdrop-blur-xl border border-white/20"
+          [ngClass]="{
+            'bg-emerald-500/90 text-white': statusType() === 'success',
+            'bg-rose-500/90 text-white': statusType() === 'error'
+          }"
+        >
+          <app-icon [name]="statusType() === 'success' ? 'check' : 'error'" [size]="24"></app-icon>
+          <span class="font-black text-lg tracking-tight">{{ statusMessage() }}</span>
+        </div>
+      </div>
+  

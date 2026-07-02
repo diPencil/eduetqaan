@@ -1,0 +1,254 @@
+
+    <div class="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 font-sans" dir="rtl">
+      <!-- Header Section -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+        <div>
+          <h1 class="text-2xl font-black text-slate-800 tracking-tight italic flex items-center gap-2">
+            <span class="w-1.5 h-8 bg-blue-600 rounded-full"></span>
+            مركز إدارة الواتساب
+          </h1>
+          <p class="text-slate-500 font-bold mt-1 mr-3.5 italic leading-relaxed">إدارة الربط، بناء الحملات، ومتابعة التقارير في مكان واحد.</p>
+        </div>
+      </div>
+        
+        <!-- Navigation Tabs -->
+        <div class="flex bg-white p-1.5 rounded-2xl border border-slate-100 shadow-sm self-start">
+          <button (click)="activeTab.set('connection')" 
+                  [ngClass]="activeTab() === 'connection' ? 'bg-emerald-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-600'"
+                  class="px-6 py-2.5 rounded-xl font-black text-sm transition-all duration-300">الاتصال</button>
+          <button (click)="activeTab.set('campaigns')" 
+                  [ngClass]="activeTab() === 'campaigns' ? 'bg-emerald-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-600'"
+                  class="px-6 py-2.5 rounded-xl font-black text-sm transition-all duration-300">مدير الحملات</button>
+          <button (click)="activeTab.set('history')" 
+                  [ngClass]="activeTab() === 'history' ? 'bg-emerald-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-600'"
+                  class="px-6 py-2.5 rounded-xl font-black text-sm transition-all duration-300">سجل النشاط</button>
+        </div>
+        
+      <!-- TAB 1: CONNECTION -->
+      <div *ngIf="activeTab() === 'connection'" class="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-in zoom-in-95 duration-500">
+        <!-- Status Card -->
+        <div class="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center space-y-6">
+          <div [ngClass]="status()?.ready ? 'bg-emerald-50 text-emerald-500 shadow-emerald-100' : 'bg-slate-50 text-slate-400 shadow-slate-100'" 
+               class="w-24 h-24 rounded-[32px] flex items-center justify-center shadow-2xl transition-all duration-700">
+            <app-icon [name]="status()?.ready ? 'check-circle' : 'zap-off'" [size]="48"></app-icon>
+          </div>
+          
+          <div>
+            <h3 class="text-2xl font-black text-slate-800">{{ status()?.ready ? 'متصل الآن' : 'غير متصل' }}</h3>
+            <p class="text-slate-400 font-bold mt-1">{{ status()?.phoneNumber || 'يرجى ربط رقم الواتساب لبدء الاستخدام' }}</p>
+          </div>
+
+          <div *ngIf="status()?.ready" class="w-full p-6 bg-emerald-50/50 rounded-3xl border border-emerald-100 space-y-1">
+            <p class="text-xs font-black text-emerald-600 uppercase tracking-widest">اسم الحساب</p>
+            <p class="text-lg font-black text-emerald-700">{{ status()?.pushName || '---' }}</p>
+          </div>
+
+          <button *ngIf="status()?.ready" (click)="logout()" 
+                  class="px-8 py-4 bg-red-50 text-red-500 rounded-2xl font-black hover:bg-red-600 hover:text-white transition-all shadow-lg shadow-red-100">
+            تسجيل الخروج من الواتساب
+          </button>
+          <button *ngIf="!status()?.ready && !status()?.qrCode" (click)="initConnection()" 
+                  class="px-10 py-5 bg-blue-600 text-white rounded-2xl font-black shadow-xl shadow-blue-200 hover:bg-blue-700 transition-all">
+            بدء عملية الربط الجديدة
+          </button>
+        </div>
+
+        <!-- QR Code Card -->
+        <div *ngIf="!status()?.ready && status()?.qrCode" class="bg-white p-8 rounded-[40px] border-2 border-blue-100 shadow-xl shadow-blue-50/50 flex flex-col items-center justify-center text-center space-y-6 animate-in slide-in-from-right-8 duration-700">
+          <div class="p-4 bg-white rounded-3xl border-4 border-blue-50">
+            <img [src]="status()?.qrCode" alt="QR Code" class="w-64 h-64 object-contain" />
+          </div>
+          <div class="space-y-2">
+            <h3 class="text-xl font-black text-blue-600 italic tracking-tight">قم بمسح الكود (QR Code)</h3>
+            <p class="text-slate-400 text-sm font-medium leading-relaxed max-w-xs mx-auto italic">
+              افتح واتساب على هاتفك > الإعدادات > الأجهزة المرتبطة > ربط جهاز، ثم امسح الكود الظاهر أمامك.
+            </p>
+          </div>
+          <div class="flex items-center gap-2 text-xs font-black text-blue-400 animate-pulse">
+            <span class="w-2 h-2 bg-blue-400 rounded-full"></span>
+            <span>بانتظار عملية المسح...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: CAMPAIGNS -->
+      <div *ngIf="activeTab() === 'campaigns'" class="space-y-8 animate-in slide-in-from-left-8 duration-700">
+        <div class="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm h-fit">
+          <form [formGroup]="campaignForm" (ngSubmit)="sendCampaign()" class="space-y-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div class="space-y-2">
+                <label class="text-xs font-black text-slate-400 uppercase tracking-widest mr-2">اسم الحملة (للأرشفة)</label>
+                <input type="text" formControlName="title" placeholder="مثال: رسالة ترحيب بالطلاب الجدد" 
+                       class="w-full px-6 py-4.5 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all font-bold" />
+              </div>
+
+              <div class="space-y-2">
+                <label class="text-xs font-black text-slate-400 uppercase tracking-widest mr-2">نوع الاستهداف *</label>
+                <select formControlName="targetType" class="w-full px-6 py-4.5 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 outline-none font-bold appearance-none">
+                  <option value="FILTERS">الطلاب حسب (السنة / السنتر)</option>
+                  <option value="ATTENDANCE">طلاب حضروا محاضرة معينة</option>
+                  <option value="ABSENT_ATTENDANCE">طلاب غائبين عن محاضرة</option>
+                  <option value="SPECIFIC_CODES">أكواد طلاب محددة</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Targeting Filters -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 border-t border-slate-50 pt-8" *ngIf="campaignForm.get('targetType')?.value !== 'SPECIFIC_CODES'">
+              <div *ngIf="campaignForm.get('targetType')?.value === 'FILTERS'" class="grid grid-cols-2 gap-4">
+                <div class="space-y-2">
+                  <label class="text-[10px] font-black text-slate-400 uppercase mr-2">السنة الدراسية</label>
+                  <select (change)="updateFilters($event, 'level')" class="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm">
+                    <option value="">الكل</option>
+                    <option value="أولي ثانوي">أولي ثانوي</option>
+                    <option value="تانية ثانوي">تانية ثانوي</option>
+                    <option value="تالتة ثانوي">تالتة ثانوي</option>
+                  </select>
+                </div>
+                <div class="space-y-2">
+                  <label class="text-[10px] font-black text-slate-400 uppercase mr-2">السنتر</label>
+                  <select (change)="updateFilters($event, 'centerId')" class="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm">
+                    <option value="">الكل</option>
+                    <option *ngFor="let c of centers()" [value]="c.id">{{ c.name }}</option>
+                  </select>
+                </div>
+              </div>
+
+              <div *ngIf="campaignForm.get('targetType')?.value === 'ATTENDANCE' || campaignForm.get('targetType')?.value === 'ABSENT_ATTENDANCE'" class="space-y-2">
+                <label class="text-[10px] font-black text-slate-400 uppercase mr-2">اختر المحاضرة</label>
+                <select formControlName="lessonId" class="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm">
+                  <option value="">اختر من القائمة...</option>
+                  <option *ngFor="let l of lessons()" [value]="l.id">{{ l.title }}</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Specific Codes Textarea -->
+            <div *ngIf="campaignForm.get('targetType')?.value === 'SPECIFIC_CODES'" class="space-y-2 border-t border-slate-50 pt-8">
+              <label class="text-[10px] font-black text-slate-400 uppercase mr-2">أدخل الأكواد (مفصولة بفاصلة أو سطر جديد)</label>
+              <textarea formControlName="specificCodes" rows="3" placeholder="مثال: 1001, 1002, 1003" 
+                        class="w-full px-6 py-4.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-sm resize-none focus:ring-4 focus:ring-emerald-500/10 transition-all"></textarea>
+            </div>
+
+            <!-- Message Builder -->
+            <div class="space-y-4 border-t border-slate-50 pt-8">
+              <div class="flex justify-between items-center mr-2">
+                <label class="text-sm font-black text-slate-800">محتوى الرسالة *</label>
+                <button type="button" (click)="messageTemplate.value = ''" class="text-[10px] font-black text-red-400 hover:text-red-500 transition-colors underline decoration-red-100 decoration-2">إفراغ النص</button>
+              </div>
+              
+              <div class="relative group">
+                <textarea #messageTemplate formControlName="messageTemplate" rows="6" 
+                          placeholder="اكتب رسالتك هنا... استخدم المتغيرات بالأسفل للتخصيص" 
+                          class="w-full px-6 py-6 bg-slate-50 border border-slate-100 rounded-[32px] focus:ring-[12px] focus:ring-emerald-500/5 focus:border-emerald-500 outline-none transition-all font-bold placeholder:text-slate-300 resize-none text-lg"></textarea>
+                
+                <!-- Variables Helper -->
+                <div class="absolute bottom-4 left-4 right-4 flex flex-wrap gap-2 opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none group-focus-within:pointer-events-auto">
+                  <button type="button" (click)="insertVariable('{{name}}')" class="px-3 py-1.5 bg-white border border-slate-100 rounded-xl text-[10px] font-black text-emerald-600 shadow-sm hover:scale-105 transition-transform active:scale-95">اسم الطالب +</button>
+                  <button type="button" (click)="insertVariable('{{balance}}')" class="px-3 py-1.5 bg-white border border-slate-100 rounded-xl text-[10px] font-black text-emerald-600 shadow-sm hover:scale-105 transition-transform active:scale-95">الرصيد +</button>
+                  <button type="button" (click)="insertVariable('{{code}}')" class="px-3 py-1.5 bg-white border border-slate-100 rounded-xl text-[10px] font-black text-emerald-600 shadow-sm hover:scale-105 transition-transform active:scale-95">كود الطالب +</button>
+                  <button type="button" (click)="insertVariable('{{grade}}')" class="px-3 py-1.5 bg-white border border-slate-100 rounded-xl text-[10px] font-black text-emerald-600 shadow-sm hover:scale-105 transition-transform active:scale-95">المرحلة +</button>
+                </div>
+              </div>
+
+              <!-- Quick Templates selection -->
+              <div class="flex flex-wrap gap-2 pt-2">
+                <button type="button" *ngFor="let t of quickTemplates" (click)="useTemplate(t.body)"
+                        class="px-4 py-2 bg-slate-50 border border-white text-[11px] font-bold text-slate-500 rounded-xl hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-100 transition-all">
+                  {{ t.label }}
+                </button>
+              </div>
+            </div>
+
+            <button type="submit" [disabled]="campaignForm.invalid || !status()?.ready || isSending()"
+                    class="w-full py-6 bg-emerald-500 text-white rounded-[32px] font-black shadow-2xl shadow-emerald-500/20 hover:bg-emerald-600 disabled:opacity-50 disabled:translate-y-0 transition-all font-sans relative overflow-hidden group">
+              <span *ngIf="!isSending()" class="relative z-10 flex items-center justify-center gap-3 text-lg">
+                <app-icon name="send" [size]="20"></app-icon> إرسال الحملة الآن
+              </span>
+              <span *ngIf="isSending()" class="relative z-10 flex items-center justify-center gap-3">
+                <app-icon name="refresh-cw" [size]="20" className="animate-spin"></app-icon>
+                جاري المعالجة...
+              </span>
+            </button>
+
+            <p *ngIf="!status()?.ready" class="text-center text-xs font-black text-red-500/60 flex items-center justify-center gap-2">
+              <app-icon name="alert-triangle" [size]="14"></app-icon> يرجى ربط حساب الواتساب أولاً قبل محاولة الإرسال.
+            </p>
+          </form>
+        </div>
+      </div>
+
+      <!-- TAB 3: HISTORY -->
+      <div *ngIf="activeTab() === 'history'" class="animate-in slide-in-from-bottom-8 duration-500 space-y-6">
+        <div class="bg-white rounded-[40px] border border-slate-100 shadow-sm overflow-hidden">
+          <div class="p-8 border-b border-slate-100 bg-slate-50/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h3 class="text-xl font-black text-slate-800 italic">سجل الحملات والنشاط</h3>
+              <p class="text-xs text-slate-400 font-bold mt-1">تتبع حالة وصول الرسائل ونتائج الحملات السابقة.</p>
+            </div>
+            <button (click)="loadArchives()" class="px-6 py-3 bg-white border border-slate-200 rounded-2xl hover:bg-slate-50 transition-all shadow-sm font-black text-xs flex items-center gap-2">
+              تحديث السجل <app-icon name="refresh-cw" [size]="14"></app-icon>
+            </button>
+          </div>
+          
+          <div class="overflow-x-auto text-right">
+            <table class="w-full">
+              <thead>
+                <tr class="bg-slate-50/50 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
+                  <th class="px-8 py-5">الحملة والتاريخ</th>
+                  <th class="px-8 py-5 text-center">الاستهداف</th>
+                  <th class="px-8 py-5 text-center">النتائج</th>
+                  <th class="px-8 py-5 text-center">الحالة</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                <tr *ngFor="let camp of campaigns()" class="hover:bg-slate-50/50 transition-all group">
+                  <td class="px-8 py-6">
+                    <div class="font-black text-slate-800 group-hover:text-emerald-600 transition-colors">{{ camp.title }}</div>
+                    <div class="text-[9px] text-slate-400 font-bold mt-1 flex items-center gap-2">
+                      <span class="flex items-center gap-1"><app-icon name="calendar" [size]="10"></app-icon> {{ camp.createdAt | date:'yyyy/MM/dd' }}</span>
+                      <span class="flex items-center gap-1"><app-icon name="clock" [size]="10"></app-icon> {{ camp.createdAt | date:'hh:mm a' }}</span>
+                    </div>
+                  </td>
+                  <td class="px-8 py-6 text-center">
+                    <span class="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-[9px] font-black border border-slate-200">
+                      {{ camp.targetType === 'FILTERS' ? 'فلاتر ذكية' : (camp.targetType === 'SPECIFIC_CODES' ? 'أكواد فردية' : 'تلقائي') }}
+                    </span>
+                  </td>
+                  <td class="px-8 py-6 text-center">
+                    <div class="inline-flex items-center gap-3 bg-slate-50 px-4 py-2 rounded-2xl border border-slate-100">
+                      <div class="flex flex-col items-center">
+                        <span class="text-[8px] font-black text-emerald-400 uppercase">تم الإرسال</span>
+                        <span class="text-sm font-black text-emerald-600">{{ camp.sentCount || 0 }}</span>
+                      </div>
+                      <div class="w-px h-6 bg-slate-200"></div>
+                      <div class="flex flex-col items-center">
+                        <span class="text-[8px] font-black text-red-300 uppercase">فشل</span>
+                        <span class="text-sm font-black text-red-500">{{ camp.failedCount || 0 }}</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-8 py-6 text-center">
+                    <span [ngClass]="{
+                      'bg-emerald-50 text-emerald-600 border-emerald-100': camp.status === 'COMPLETED',
+                      'bg-blue-50 text-blue-600 border-blue-100': camp.status === 'RUNNING',
+                      'bg-amber-50 text-amber-600 border-amber-100': camp.status === 'PENDING',
+                      'bg-red-50 text-red-500 border-red-100': camp.status === 'FAILED'
+                    }" class="px-4 py-1.5 rounded-full text-[10px] font-black border uppercase tracking-widest italic">
+                      {{ camp.status === 'COMPLETED' ? 'مكتمل' : (camp.status === 'RUNNING' ? 'جاري التنفيذ' : 'انتظار') }}
+                    </span>
+                  </td>
+                </tr>
+                <tr *ngIf="campaigns().length === 0">
+                  <td colspan="4" class="px-8 py-24 text-center">
+                    <app-icon name="folder" [size]="64" className="text-slate-100 mb-4 mx-auto"></app-icon>
+                    <p class="text-slate-300 font-black text-lg">لا يوجد سجلات حملات حالياً</p>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  

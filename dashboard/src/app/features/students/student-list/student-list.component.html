@@ -1,0 +1,563 @@
+<div class="space-y-6 font-sans mb-20" dir="rtl">
+  <!-- Export Settings Modal -->
+  @if (isExportSettingsModalOpen()) {
+    <div style="position: fixed; inset: 0; z-index: 10000; display: flex; align-items: center; justify-content: center; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(8px); padding: 1.5rem;">
+      <div class="bg-white rounded-[40px] shadow-2xl w-full max-w-lg overflow-hidden border border-white/20">
+        <div class="px-8 py-6 flex items-center justify-between border-b border-slate-100">
+          <div class="flex items-center gap-3">
+            <app-icon name="settings" [size]="24" className="text-slate-400"></app-icon>
+            <h3 class="text-xl font-black text-slate-800 tracking-tight">إعدادات تصدير البيانات</h3>
+          </div>
+          <button (click)="closeExportSettings()" class="w-10 h-10 bg-slate-50 text-slate-400 rounded-full flex items-center justify-center hover:bg-red-50 hover:text-red-500 transition-all font-black">✕</button>
+        </div>
+        
+        <div class="p-8 space-y-6 overflow-y-auto max-h-[70vh]">
+          <p class="text-xs font-black text-slate-400 uppercase tracking-widest text-center">اختر الأعمدة التي تريد تضمينها في ملف CSV</p>
+          
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <label *ngFor="let field of [
+              {key: 'id', label: 'المعرف (ID)'},
+              {key: 'name', label: 'اسم الطالب'},
+              {key: 'email', label: 'البريد'},
+              {key: 'phone', label: 'الهاتف'},
+              {key: 'guardianPhone', label: 'هاتف ولي الأمر'},
+              {key: 'grade', label: 'المرحلة'},
+              {key: 'region', label: 'المحافظة'},
+              {key: 'centerCode', label: 'كود السنتر'},
+              {key: 'centerName', label: 'اسم السنتر'},
+              {key: 'balance', label: 'الرصيد'},
+              {key: 'createdAt', label: 'تاريخ التسجيل'}
+            ]" class="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100 cursor-pointer hover:bg-white hover:border-indigo-200 transition-all group">
+              <input type="checkbox" [checked]="isFieldSelected(field.key)" (change)="toggleExportField(field.key)" class="w-5 h-5 rounded-lg border-slate-300 text-indigo-600 focus:ring-indigo-500">
+              <span class="text-sm font-bold text-slate-600 group-hover:text-indigo-600 transition-colors">{{ field.label }}</span>
+            </label>
+          </div>
+
+          <div class="pt-4 flex flex-col sm:flex-row gap-3">
+            <button (click)="closeExportSettings()" class="flex-1 py-4 rounded-3xl font-black text-slate-400 hover:bg-slate-100 transition-all border border-transparent">إلغاء</button>
+            <button (click)="exportToCsv()" [disabled]="isLoading()"
+                    class="flex-[2] py-4 bg-indigo-600 text-white rounded-3xl font-black shadow-2xl shadow-indigo-100 hover:bg-indigo-700 transition-all flex items-center justify-center gap-2">
+              <app-icon *ngIf="isLoading()" name="refresh-cw" [size]="20" className="animate-spin"></app-icon>
+              <span>تحميل ملف الـ CSV الآن</span>
+              <app-icon name="download" [size]="20"></app-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Page Header -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-black text-slate-800 tracking-tight">إدارة الطلاب</h1>
+      <p class="text-slate-500 mt-1">عرض وتحرير بيانات الطلاب المسجلين في المنصة.</p>
+    </div>
+    
+    <div class="grid grid-cols-2 md:flex md:flex-wrap items-center gap-3 w-full md:w-auto mt-4 md:mt-0">
+      <button (click)="openExportSettings()" [disabled]="isLoading()" class="col-span-1 md:col-auto justify-center bg-emerald-600 text-white px-4 py-3 rounded-xl font-bold flex items-center shadow-lg shadow-emerald-500/10 hover:bg-emerald-700 transition-all text-sm">
+        <app-icon name="download" [size]="18" className="ml-2"></app-icon>
+        تصدير CSV
+      </button>
+      
+      <button (click)="triggerImport()" [disabled]="isLoading()" class="col-span-1 md:col-auto justify-center bg-amber-600 text-white px-4 py-3 rounded-xl font-bold flex items-center shadow-lg shadow-amber-500/10 hover:bg-amber-700 transition-all text-sm">
+        <app-icon name="upload" [size]="18" className="ml-2"></app-icon>
+        استيراد CSV
+      </button>
+      <input type="file" id="csvImportInput" (change)="onFileSelected($event)" accept=".csv" class="hidden">
+
+      <button (click)="openAddModal()" class="col-span-2 md:col-auto justify-center bg-blue-600 text-white px-6 py-3 rounded-xl font-bold flex items-center shadow-lg shadow-blue-500/20 hover:bg-blue-700 transition-all">
+        <app-icon name="plus" [size]="20" className="ml-2"></app-icon>
+        إضافة طالب جديد
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <ng-container *ngIf="stats(); else loadingStats">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div class="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm text-right relative overflow-hidden group hover:border-blue-100 transition-all">
+        <div class="absolute -right-4 -top-4 text-6xl text-slate-50 opacity-10 group-hover:scale-110 transition-transform">
+          <app-icon name="users" [size]="64"></app-icon>
+        </div>
+        <p class="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] mb-1">إجمالي الطلاب</p>
+        <h3 class="text-3xl font-black text-slate-800 tracking-tight">{{ stats()?.totalStudents || 0 }}</h3>
+        <div class="mt-4 flex gap-2">
+          <span class="text-[9px] font-black bg-blue-50 text-blue-600 px-2 py-1 rounded-lg border border-blue-100/30 italic">نظام المبدع محمد سامي</span>
+        </div>
+      </div>
+
+      <div class="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm text-right relative overflow-hidden group hover:border-amber-100 transition-all">
+        <div class="absolute -right-4 -top-4 text-6xl text-amber-50 opacity-20 group-hover:scale-110 transition-transform">
+          <app-icon name="dollar-sign" [size]="64"></app-icon>
+        </div>
+        <p class="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] mb-1">إجمالي المحافظ</p>
+        <h3 class="text-3xl font-black text-amber-600 tracking-tight">{{ ((stats()?.totalBalanceCents || 0) / 100) | number:'1.2-2' }} <small class="text-xs">ج.م</small></h3>
+        <p class="text-[10px] text-slate-400 font-bold mt-1 tracking-tighter uppercase italic">بإجمالي {{ stats()?.totalBalanceCents || 0 }} مليم</p>
+      </div>
+
+      <div class="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm text-right relative overflow-hidden group hover:border-indigo-100 transition-all">
+        <div class="absolute -right-4 -top-4 text-6xl text-indigo-50 opacity-20 group-hover:scale-110 transition-transform">
+          <app-icon name="graduation-cap" [size]="64"></app-icon>
+        </div>
+        <p class="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] mb-1">توزيع المراحل</p>
+        <div class="space-y-1.5 mt-2">
+          <div *ngFor="let g of stats()?.byGrade || []" class="flex items-center justify-between group/row">
+            <span class="text-[10px] font-bold text-slate-500 group-hover/row:text-indigo-600 transition-colors">{{ g.year }}</span>
+            <span class="text-[10px] font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100/50 shadow-sm">{{ g.count }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm text-right relative overflow-hidden group hover:border-emerald-100 transition-all">
+        <div class="absolute -right-4 -top-4 text-6xl text-emerald-50 opacity-20 group-hover:scale-110 transition-transform">
+          <app-icon name="building" [size]="64"></app-icon>
+        </div>
+        <p class="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] mb-1">التواجد</p>
+        <div class="flex items-end justify-between mt-4">
+           <div class="flex flex-col items-center">
+             <span class="text-2xl font-black text-emerald-600 italic">{{ stats()?.centerVsOnline?.center || 0 }}</span>
+             <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">سناتر</span>
+           </div>
+           <div class="h-10 w-px bg-slate-50 border-r border-slate-100/50"></div>
+           <div class="flex flex-col items-center">
+             <span class="text-2xl font-black text-blue-600 italic">{{ stats()?.centerVsOnline?.online || 0 }}</span>
+             <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">أونلاين</span>
+           </div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+  <ng-template #loadingStats>
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 animate-pulse">
+      <div *ngFor="let i of [1,2,3,4]" class="bg-slate-50 h-32 rounded-[32px] border border-slate-100"></div>
+    </div>
+  </ng-template>
+
+  <!-- Filters Toolbar -->
+  <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">
+    <div class="flex items-center justify-between border-b border-slate-50 pb-4">
+       <h3 class="text-sm font-black text-slate-800 flex items-center gap-2">
+         <app-icon name="search" [size]="16"></app-icon> فلاتر البحث المتقدمة
+       </h3>
+       <button (click)="resetFilters()" class="text-xs font-bold text-slate-400 hover:text-blue-600 transition-colors bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">إعادة ضبط الفلاتر</button>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <!-- Main Search -->
+      <div class="lg:col-span-2 relative">
+          <input
+            type="text"
+            placeholder="البحث بالاسم، الكود، الشريحة أو رقم الهاتف..."
+            [(ngModel)]="searchTerm"
+            (input)="onSearch()"
+            class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-10 text-sm focus:ring-2 focus:ring-blue-500 transition-all font-bold"
+          />
+        <app-icon name="search" [size]="14" className="absolute right-3 top-3.5 text-slate-400"></app-icon>
+      </div>
+      
+      <select 
+        [(ngModel)]="selectedGrade"
+        (change)="loadStudents(1)"
+        class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 font-bold text-slate-600"
+      >
+        <option value="">كل المراحل الدراسية</option>
+        <option value="الصف الاول الثانوي">الصف الأول الثانوي</option>
+        <option value="الصف الثاني الثانوي">الصف الثاني الثانوي</option>
+        <option value="الصف الثالث الثانوي">الصف الثالث الثانوي</option>
+      </select>
+
+      <!-- Center Filter -->
+      <select 
+        [(ngModel)]="selectedCenterId"
+        (change)="loadStudents(1)"
+        class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 font-bold text-slate-600"
+      >
+        <option [value]="null">كل السناتر</option>
+        <option *ngFor="let c of centers()" [value]="c.id">{{ c.name }}</option>
+      </select>
+
+      <!-- Governorate/Region Filter -->
+      <input
+        type="text"
+        placeholder="المحافظة..."
+        [(ngModel)]="selectedRegion"
+        (input)="onSearch()"
+        class="bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-blue-500 font-bold text-slate-600"
+      />
+    </div>
+
+    <div class="flex flex-wrap items-center gap-6 pt-2">
+       <label class="flex items-center gap-2 cursor-pointer group">
+          <input type="checkbox" [(ngModel)]="hasBalance" (change)="loadStudents(1)" class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+          <span class="text-xs font-black text-slate-500 group-hover:text-slate-800 transition-colors">عرض الطلاب الذين لديهم رصيد فقط</span>
+       </label>
+
+       <div class="h-4 w-px bg-slate-100 hidden md:block"></div>
+
+       <div class="flex items-center gap-3">
+         <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">تاريخ التسجيل:</span>
+         <div class="flex items-center gap-2">
+           <input type="date" [(ngModel)]="startDate" (change)="loadStudents(1)" 
+                  class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-bold text-slate-600 focus:ring-2 focus:ring-blue-500 outline-none">
+           <span class="text-slate-300 text-xs">←</span>
+           <input type="date" [(ngModel)]="endDate" (change)="loadStudents(1)"
+                  class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-bold text-slate-600 focus:ring-2 focus:ring-blue-500 outline-none">
+         </div>
+       </div>
+    </div>
+  </div>
+
+  <!-- Students List (Responsive) -->
+  <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden min-h-[400px]">
+    
+    <!-- Desktop Table (Hidden on Mobile) -->
+    <div class="hidden md:block overflow-x-auto">
+      <table class="w-full text-right">
+        <thead class="bg-slate-50 text-slate-500 text-[10px] font-black uppercase tracking-wider border-b border-slate-100">
+          <tr>
+            <th class="px-6 py-4">الطالب والمعلومات الأساسية</th>
+            <th class="px-6 py-4 text-center">أرقام الهواتف</th>
+            <th class="px-6 py-4 text-center">المرحلة / المحافظة</th>
+            <th class="px-6 py-4 text-center">السنتر / رصيد المحفظة</th>
+            <th class="px-6 py-4 text-left">الإجراءات والتحكم</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          <tr *ngFor="let s of students()" class="hover:bg-blue-50/30 transition-all group">
+            <td class="px-6 py-4">
+              <div class="flex items-center">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center ml-3 text-white font-bold shadow-sm group-hover:scale-105 transition-transform">
+                  {{ (s.studentName?.[0] || 'S') }}
+                </div>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <p class="font-bold text-slate-800">{{ s.studentName }}</p>
+                    <span *ngIf="s.centerCode" class="text-[9px] font-black bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded border border-slate-200 uppercase tracking-tighter shadow-sm">
+                      {{ s.centerCode }}
+                    </span>
+                  </div>
+                  <p class="text-xs text-slate-400 font-mono">{{ s.email || 'بدون بريد إلكتروني' }}</p>
+                </div>
+              </div>
+            </td>
+            <td class="px-6 py-4 text-center">
+              <div class="text-sm font-bold text-slate-700">{{ s.studentPhone }}</div>
+              <div *ngIf="s.guardianPhone" class="text-[9px] text-slate-400 font-black uppercase">ولي الأمر: {{ s.guardianPhone }}</div>
+            </td>
+            <td class="px-6 py-4 text-center">
+               <div class="flex flex-col items-center gap-1">
+                  <span class="bg-blue-50 text-blue-600 px-2 py-0.5 rounded text-[10px] font-black border border-blue-100">{{ s.year }}</span>
+                  <span class="text-xs text-slate-500 font-bold italic">{{ s.region || '—' }}</span>
+               </div>
+            </td>
+            <td class="px-6 py-4 text-center">
+              <div class="flex flex-col items-center gap-1">
+                <span *ngIf="s.centerName" class="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
+                  {{ s.centerName }}
+                </span>
+                <span *ngIf="!s.centerName" class="text-[10px] text-slate-300 italic font-bold">منصة أونلاين</span>
+                <span *ngIf="s.balanceCents > 0" class="text-[10px] font-black text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-100">
+                   رصيد: {{ (s.balanceCents / 100).toFixed(2) }} ج.م
+                </span>
+              </div>
+            </td>
+            <td class="px-6 py-4 text-left">
+              <div class="flex items-center justify-end space-x-2 space-x-reverse text-lg">
+                <button (click)="grantCertificate(s)" class="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-indigo-600 hover:bg-indigo-100 rounded-xl transition-all border border-transparent hover:border-indigo-200 shadow-sm" title="منح شهادة تقدير">
+                  <app-icon name="graduation-cap" [size]="20"></app-icon>
+                </button>
+                <button (click)="openWaModal(s)" class="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-emerald-600 hover:bg-emerald-100 rounded-xl transition-all border border-transparent hover:border-emerald-200 shadow-sm hover:shadow-md" title="إرسال واتساب">
+                  <app-icon name="message-square" [size]="20"></app-icon>
+                </button>
+                <a [routerLink]="['/students', s.id]" class="p-2 min-w-[44px] min-h-[44px] text-blue-600 hover:bg-blue-100 rounded-xl transition-all flex items-center justify-center border border-transparent hover:border-blue-200 shadow-sm hover:shadow-md" title="عرض التفاصيل">
+                  <app-icon name="eye" [size]="20"></app-icon>
+                </a>
+                <button (click)="openEditModal(s)" class="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-amber-600 hover:bg-amber-100 rounded-xl transition-all border border-transparent hover:border-amber-200" title="تعديل">
+                  <app-icon name="edit-3" [size]="20"></app-icon>
+                </button>
+                <button (click)="onDelete(s.id)" class="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-red-600 hover:bg-red-100 rounded-xl transition-all border border-transparent hover:border-red-200" title="حذف">
+                  <app-icon name="trash-2" [size]="20"></app-icon>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Mobile Cards View (Hidden on Desktop) -->
+    <div class="md:hidden grid grid-cols-1 gap-4 p-4">
+      <div *ngFor="let s of students()" class="bg-slate-50 rounded-2xl p-4 border border-slate-100 shadow-sm flex flex-col gap-4">
+        
+        <!-- Header: Avatar & Name -->
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold shadow-sm">
+            {{ (s.studentName?.[0] || 'S') }}
+          </div>
+          <div class="flex-1">
+            <h4 class="font-bold text-slate-800 text-sm mb-1">{{ s.studentName }}</h4>
+            <div class="flex flex-wrap gap-2">
+              <span *ngIf="s.centerCode" class="text-[9px] font-black bg-white text-slate-500 px-1.5 py-0.5 rounded border border-slate-200 uppercase">{{ s.centerCode }}</span>
+              <span class="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded text-[9px] font-black">{{ s.year }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Details Grid -->
+        <div class="grid grid-cols-2 gap-3 bg-white p-3 rounded-xl border border-slate-100">
+          <div>
+            <p class="text-[10px] text-slate-400 font-bold mb-1">الهاتف</p>
+            <p class="text-xs font-bold text-slate-700">{{ s.studentPhone }}</p>
+          </div>
+          <div>
+            <p class="text-[10px] text-slate-400 font-bold mb-1">السنتر</p>
+            <p class="text-[10px] font-bold" [class.text-emerald-600]="s.centerName" [class.text-slate-400]="!s.centerName">{{ s.centerName || 'أونلاين' }}</p>
+          </div>
+          <div>
+            <p class="text-[10px] text-slate-400 font-bold mb-1">رصيد</p>
+            <p class="text-xs font-black" [class.text-amber-600]="s.balanceCents > 0" [class.text-slate-500]="s.balanceCents === 0">{{ (s.balanceCents / 100).toFixed(2) }} ج.م</p>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex items-center justify-between pt-2 border-t border-slate-200">
+           <a [routerLink]="['/students', s.id]" class="min-w-[44px] min-h-[44px] flex items-center justify-center text-blue-600 bg-blue-50 rounded-xl">
+             <app-icon name="eye" [size]="18"></app-icon>
+           </a>
+           <button (click)="openWaModal(s)" class="min-w-[44px] min-h-[44px] flex items-center justify-center text-emerald-600 bg-emerald-50 rounded-xl">
+             <app-icon name="message-square" [size]="18"></app-icon>
+           </button>
+           <button (click)="openEditModal(s)" class="min-w-[44px] min-h-[44px] flex items-center justify-center text-amber-600 bg-amber-50 rounded-xl">
+             <app-icon name="edit-3" [size]="18"></app-icon>
+           </button>
+           <button (click)="onDelete(s.id)" class="min-w-[44px] min-h-[44px] flex items-center justify-center text-red-600 bg-red-50 rounded-xl">
+             <app-icon name="trash-2" [size]="18"></app-icon>
+           </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!students().length && !isLoading()" class="px-6 py-24 text-center">
+      <div class="flex flex-col items-center text-slate-200">
+        <app-icon name="search" [size]="64" className="mb-4 opacity-20"></app-icon>
+        <p class="font-black text-2xl text-slate-300">لا يوجد طلاب مطابقين للبحث</p>
+        <p class="text-slate-400 mt-2 font-bold">جرب تغيير فلاتر البحث أو الكلمة المفتاحية</p>
+        <button (click)="resetFilters()" class="mt-6 bg-slate-900 text-white px-6 min-h-[44px] rounded-xl font-bold hover:bg-slate-800 transition-all flex items-center justify-center mx-auto">إعادة ضبط الفلاتر</button>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="isLoading()" class="px-6 py-12 text-center">
+      <div class="flex flex-col items-center justify-center gap-3 text-slate-400 font-bold py-12">
+          <app-icon name="refresh-cw" [size]="40" className="animate-spin mb-2"></app-icon>
+          <p class="text-sm">جاري تحميل بيانات الطلاب...</p>
+      </div>
+    </div>
+
+    <!-- Pagination Controls -->
+    <div class="p-8 bg-slate-50 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-6">
+       <div class="flex items-center gap-4">
+          <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-white px-4 py-2 rounded-lg border border-slate-200 shadow-sm">
+             إجمالي النتائج: {{ pagination().total }} طالب
+          </div>
+       </div>
+       
+       <div class="flex items-center gap-4">
+          <button (click)="goToPage(pagination().page - 1)" [disabled]="pagination().page <= 1" 
+                  class="px-5 py-2.5 rounded-xl bg-white border border-slate-200 text-xs font-black hover:bg-slate-50 disabled:opacity-30 transition-all shadow-sm flex items-center gap-2">
+            <span>السابق</span>
+          </button>
+          
+          <div class="flex items-center gap-2">
+             <ng-container *ngFor="let p of [].constructor(pagination().totalPages); let i = index">
+               <button (click)="goToPage(i + 1)"
+                       *ngIf="i + 1 >= pagination().page - 2 && i + 1 <= pagination().page + 2"
+                       [ngClass]="pagination().page === i + 1 ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30' : 'bg-white text-slate-500 border border-slate-100 hover:bg-slate-50'"
+                       class="w-10 h-10 rounded-xl text-xs font-black transition-all">
+                  {{ i + 1 }}
+               </button>
+             </ng-container>
+          </div>
+
+          <button (click)="goToPage(pagination().page + 1)" [disabled]="pagination().page >= pagination().totalPages" 
+                  class="px-5 py-2.5 rounded-xl bg-white border border-slate-200 text-xs font-black hover:bg-slate-50 disabled:opacity-30 transition-all shadow-sm flex items-center gap-2">
+            <span>التالي</span>
+          </button>
+       </div>
+    </div>
+  </div>
+
+  <!-- Add/Edit Modal -->
+  <div *ngIf="isModalOpen()" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-200">
+    <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden animate-in zoom-in duration-200 flex flex-col border border-white/20">
+      <div class="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-white shrink-0">
+        <h3 class="text-xl font-black text-slate-800 tracking-tight">{{ isEditing() ? 'تعديل بيانات الطالب' : 'إضافة طالب جديد' }}</h3>
+        <button (click)="closeModal()" class="w-10 h-10 bg-slate-50 text-slate-400 rounded-full flex items-center justify-center hover:bg-red-50 hover:text-red-500 transition-all font-black">✕</button>
+      </div>
+      
+      <div class="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar">
+        <form (ngSubmit)="onSubmit()" #studentF="ngForm" class="space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-right">
+            <!-- Name -->
+            <div class="space-y-2">
+              <label class="text-sm font-black text-slate-700">اسم الطالب</label>
+              <input type="text" name="studentName" [(ngModel)]="studentForm.studentName" required class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3.5 px-4 focus:ring-2 focus:ring-blue-500 transition-all font-bold text-slate-800" placeholder="الاسم ثلاثي...">
+            </div>
+            <!-- Email -->
+            <div class="space-y-2">
+              <label class="text-sm font-black text-slate-700">البريد الإلكتروني</label>
+              <input type="email" name="email" [(ngModel)]="studentForm.email" required class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3.5 px-4 focus:ring-2 focus:ring-blue-500 transition-all font-mono" placeholder="example@mail.com">
+            </div>
+            <!-- Phone -->
+            <div class="space-y-2">
+              <label class="text-sm font-black text-slate-700">رقم الهاتف</label>
+              <input type="text" name="studentPhone" [(ngModel)]="studentForm.studentPhone" required class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3.5 px-4 focus:ring-2 focus:ring-blue-500 transition-all font-mono" placeholder="01xxxxxxxxx">
+            </div>
+            <!-- Guardian Phone -->
+            <div class="space-y-2">
+              <label class="text-sm font-black text-slate-700">رقم ولي الأمر</label>
+              <input type="text" name="guardianPhone" [(ngModel)]="studentForm.guardianPhone" required class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3.5 px-4 focus:ring-2 focus:ring-blue-500 transition-all font-mono" placeholder="01xxxxxxxxx">
+            </div>
+            <!-- Grade -->
+            <div class="space-y-2">
+              <label class="text-sm font-black text-slate-700">المرحلة الدراسية</label>
+              <select name="year" [(ngModel)]="studentForm.year" required class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3.5 px-4 focus:ring-2 focus:ring-blue-500 transition-all font-bold">
+                <option value="الصف الاول الثانوي">الصف الأول الثانوي</option>
+                <option value="الصف الثاني الثانوي">الصف الثاني الثانوي</option>
+                <option value="الصف الثالث الثانوي">الصف الثالث الثانوي</option>
+              </select>
+            </div>
+            <!-- Center Select -->
+            <div class="space-y-2">
+              <label class="text-sm font-black text-slate-700">السنتر التابع له</label>
+              <select name="centerId" [(ngModel)]="studentForm.centerId" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3.5 px-4 focus:ring-2 focus:ring-blue-500 transition-all font-bold">
+                <option [ngValue]="null">أونلاين (بدون سنتر)</option>
+                <option *ngFor="let c of centers()" [ngValue]="c.id">{{ c.name }}</option>
+              </select>
+            </div>
+            <!-- Center Code -->
+            <div class="space-y-2">
+              <label class="text-sm font-black text-slate-700">كود السنتر (QR/Card)</label>
+              <input type="text" name="centerCode" [(ngModel)]="studentForm.centerCode" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3.5 px-4 focus:ring-2 focus:ring-blue-500 transition-all font-bold text-slate-800 uppercase" placeholder="مثال: MS-123">
+            </div>
+            <!-- Region -->
+            <div class="space-y-2">
+              <label class="text-sm font-black text-slate-700">المحافظة</label>
+              <input type="text" name="region" [(ngModel)]="studentForm.region" required class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3.5 px-4 focus:ring-2 focus:ring-blue-500 transition-all font-bold" placeholder="القاهرة، الجيزة...">
+            </div>
+            <!-- Password (Only on Add) -->
+            <div class="space-y-2" *ngIf="!isEditing()">
+              <label class="text-sm font-black text-slate-700">كلمة المرور</label>
+              <input type="password" name="password" [(ngModel)]="studentForm.password" [required]="!isEditing()" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3.5 px-4 focus:ring-2 focus:ring-blue-500 transition-all" placeholder="••••••••">
+            </div>
+          </div>
+
+          <div class="flex flex-col md:flex-row items-center justify-end gap-3 pt-6 border-t border-slate-100 shrink-0">
+            <button type="button" (click)="closeModal()" class="w-full md:w-auto px-6 py-3 rounded-xl font-bold text-slate-500 hover:bg-slate-100 transition-all">إلغاء</button>
+            <button type="submit" [disabled]="!studentF.form.valid || isSaving()" class="w-full md:w-auto bg-blue-600 text-white px-10 py-3 rounded-xl font-bold shadow-lg shadow-blue-500/20 hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
+               <app-icon *ngIf="isSaving()" name="refresh-cw" [size]="20" className="animate-spin ml-2"></app-icon>
+              {{ isEditing() ? 'حفظ التعديلات' : 'إضافة الطالب' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- WhatsApp Modal -->
+  <div *ngIf="isWaModalOpen()" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-200">
+    <div class="bg-white rounded-[40px] shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in duration-200 border border-white/20">
+      <div class="px-8 py-6 flex items-center justify-between border-b border-slate-50">
+        <div class="flex items-center gap-3">
+          <app-icon name="message-square" [size]="24" className="text-emerald-500"></app-icon>
+          <h3 class="text-xl font-black text-slate-800 italic">إرسال رسالة واتساب</h3>
+        </div>
+        <button (click)="closeWaModal()" class="w-10 h-10 bg-slate-50 text-slate-400 rounded-full flex items-center justify-center hover:bg-red-50 hover:text-red-500 transition-all font-black">✕</button>
+      </div>
+      
+      <div class="p-8 space-y-6">
+        <div class="p-4 bg-emerald-50 rounded-3xl border border-emerald-100 flex items-center gap-4">
+          <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-xl shadow-sm text-emerald-600 font-black">{{ waTargetStudent()?.studentName?.charAt(0) }}</div>
+          <div>
+            <p class="text-sm font-black text-emerald-800">{{ waTargetStudent()?.studentName }}</p>
+            <p class="text-[10px] font-black text-emerald-600 opacity-70 tracking-widest">{{ waTargetStudent()?.studentPhone }}</p>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <label class="text-xs font-black text-slate-400 uppercase tracking-widest mr-2">محتوى الرسالة *</label>
+          <textarea [(ngModel)]="waMessage" rows="5" placeholder="أهلاً بك، نود إبلاغك بـ..." 
+                    class="w-full px-6 py-5 bg-slate-50 border border-slate-100 rounded-3xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all font-bold placeholder:text-slate-300 resize-none"></textarea>
+        </div>
+
+        <button (click)="sendWaMessage()" [disabled]="!waMessage || isSaving()"
+                class="w-full py-5 bg-emerald-500 text-white rounded-3xl font-black shadow-2xl shadow-emerald-100 hover:bg-emerald-600 disabled:opacity-50 transition-all font-sans flex items-center justify-center gap-2">
+          <span>{{ isSaving() ? 'جاري الإرسال...' : 'إرسال الرسالة الآن' }}</span>
+          <app-icon *ngIf="!isSaving()" name="send" [size]="20"></app-icon>
+          <app-icon *ngIf="isSaving()" name="refresh-cw" [size]="20" className="animate-spin"></app-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Premium Delete Confirmation Modal -->
+  <div *ngIf="isDeleteModalOpen()" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+    <div class="bg-white rounded-[32px] shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in duration-300 border border-slate-100 px-2 py-4">
+      <div class="p-8 text-center">
+        <div class="w-20 h-20 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl shadow-inner">
+           <app-icon name="alert-triangle" [size]="40"></app-icon>
+        </div>
+        <h3 class="text-2xl font-black text-slate-800 mb-2">تأكيد الحذف</h3>
+        <p class="text-slate-500 font-medium font-bold">هل أنت متأكد من حذف هذا الطالب؟<br>لا يمكن التراجع عن هذا الإجراء.</p>
+      </div>
+      
+      <div class="p-6 bg-slate-50/50 flex gap-4 rounded-b-[32px]">
+        <button (click)="closeDeleteModal()" class="flex-1 py-4 rounded-2xl font-black text-slate-500 hover:bg-white hover:shadow-sm transition-all border border-transparent hover:border-slate-200">
+          إلغاء
+        </button>
+        <button (click)="confirmDelete()" class="flex-1 py-4 bg-rose-600 text-white rounded-2xl font-black shadow-lg shadow-rose-500/30 hover:bg-rose-700 transition-all">
+          نعم، حذف الآن
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Premium Import Confirmation Modal -->
+  <div *ngIf="isImportConfirmModalOpen()" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+    <div class="bg-white rounded-[32px] shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in duration-300 border border-slate-100">
+      <div class="p-8 text-center">
+        <div class="w-20 h-20 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl shadow-inner">
+           <app-icon name="upload" [size]="40"></app-icon>
+        </div>
+        <h3 class="text-2xl font-black text-slate-800 mb-2">تأكيد الاستيراد</h3>
+        <p class="text-slate-500 font-medium font-bold px-2">هل أنت متأكد من استيراد <span class="text-amber-600">{{ studentsToImport().length }}</span> طالب؟<br>سيتم تحديث البيانات الموجودة مسبقاً.</p>
+      </div>
+      
+      <div class="p-6 bg-slate-50/50 flex gap-4">
+        <button (click)="closeImportModal()" class="flex-1 py-4 rounded-2xl font-black text-slate-500 hover:bg-white hover:shadow-sm transition-all border border-transparent hover:border-slate-200">
+          إلغاء
+        </button>
+        <button (click)="confirmBulkImport()" class="flex-1 py-4 bg-amber-600 text-white rounded-2xl font-black shadow-lg shadow-amber-500/30 hover:bg-amber-700 transition-all">
+          بدء الاستيراد الآن
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status Modal (Premium Feedback) -->
+  <div *ngIf="statusModal()" class="fixed top-10 left-1/2 -translate-x-1/2 z-[200] animate-in slide-in-from-top duration-500">
+    <div 
+      class="flex items-center gap-4 px-8 py-5 rounded-[30px] shadow-2xl backdrop-blur-xl border border-white/20"
+      [ngClass]="{
+        'bg-emerald-500/90 text-white': statusType() === 'success',
+        'bg-rose-500/90 text-white': statusType() === 'error'
+      }"
+    >
+      <app-icon [name]="statusType() === 'success' ? 'check-circle' : 'x-circle'" [size]="24"></app-icon>
+      <span class="font-black text-lg tracking-tight whitespace-pre-line">{{ statusMessage() }}</span>
+    </div>
+  </div>
+
+</div>

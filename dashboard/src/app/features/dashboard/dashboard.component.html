@@ -1,0 +1,520 @@
+<div class="space-y-8 font-sans pb-10" dir="rtl">
+  <!-- Welcome Header -->
+  <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-6 bg-white p-6 md:p-8 rounded-[2rem] shadow-sm border border-slate-100 animate-in fade-in slide-in-from-top-4 duration-500">
+    <div>
+      <h1 class="text-2xl md:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3">
+        <app-icon name="award" [size]="40" className="text-blue-600"></app-icon>
+        لوحة تحكم التعليمية
+      </h1>
+      <p class="text-slate-500 mt-2 text-base md:text-lg font-medium opacity-80">مرحباً بك مجدداً. إليك نظرة سريعة على أهم مؤشرات الأداء اليوم.</p>
+    </div>
+    <div class="flex flex-wrap items-center gap-3 md:gap-4">
+      <!-- Grade Filter -->
+      <div class="relative flex-1 min-w-[160px]">
+          <select 
+            class="w-full appearance-none bg-slate-50 border border-slate-200 rounded-2xl px-5 py-3.5 pr-10 text-xs md:text-sm font-black text-slate-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-sm cursor-pointer"
+            (change)="onGradeChange($event)"
+          >
+            <option value="all">كل المراحل</option>
+            <option value="الصف الاول الثانوي">الصف الأول</option>
+            <option value="الصف الثاني الثانوي">الصف الثاني</option>
+            <option value="الصف الثالث الثانوي">الصف الثالث</option>
+          </select>
+          <span class="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-xs">▼</span>
+      </div>
+
+      <!-- Date Range Filter -->
+      <div class="relative flex-1 min-w-[140px]">
+          <select 
+            class="w-full appearance-none bg-slate-50 border border-slate-200 rounded-2xl px-5 py-3.5 pr-10 text-xs md:text-sm font-black text-slate-700 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-sm cursor-pointer"
+            (change)="onRangeChange($event)"
+          >
+            <option value="this_month">هذا الشهر</option>
+            <option value="this_week">هذا الأسبوع</option>
+            <option value="last_30_days">آخر 30 يوم</option>
+            <option value="all_time">كل الأوقات</option>
+          </select>
+          <app-icon name="calendar" [size]="16" className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400"></app-icon>
+        </div>
+
+      <div class="flex items-center gap-2 w-full sm:w-auto">
+        <button (click)="loadStats()" [disabled]="isLoading()" class="flex-1 sm:flex-none bg-slate-900 text-white px-6 py-3.5 rounded-2xl flex items-center justify-center gap-2 hover:bg-slate-800 transition-all shadow-lg active:scale-95 disabled:opacity-50 text-xs font-black">
+          <app-icon name="refresh-cw" [size]="16" [className]="isLoading() ? 'animate-spin' : ''"></app-icon>
+          <span>تحديث</span>
+        </button>
+
+        <button (click)="togglePrivacy()" class="flex-1 sm:flex-none px-6 py-3.5 rounded-2xl flex items-center justify-center gap-2 transition-all bg-white border border-slate-200 shadow-sm hover:bg-slate-50 active:scale-95 text-xs font-black text-slate-700">
+          <app-icon [name]="isPrivate() ? 'lock' : 'unlock'" [size]="16"></app-icon>
+          <span>{{ isPrivate() ? 'إظهار' : 'إخفاء' }}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State Overlay -->
+  <div *ngIf="isLoading()" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-pulse">
+    <div *ngFor="let i of [1,2,3,4]" class="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm h-40"></div>
+  </div>
+
+  <!-- KPI Grid -->
+  <div *ngIf="!isLoading() && stats()" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div *ngFor="let k of stats()?.kpis" 
+          [routerLink]="getKpiRoute(k.label)"
+          class="group bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 hover:shadow-xl hover:shadow-blue-500/5 transition-all relative overflow-hidden cursor-pointer">
+      <div class="absolute -right-4 -top-4 w-24 h-24 bg-slate-50 rounded-full blur-2xl group-hover:bg-blue-50 transition-all duration-500"></div>
+      <div class="relative z-10">
+        <div 
+          class="w-12 h-12 rounded-2xl flex items-center justify-center text-white text-3xl mb-6 shadow-lg shadow-blue-500/10"
+          [style.backgroundColor]="k.color"
+        >
+          <app-icon [name]="getKpiIcon(k.label)" [size]="28"></app-icon>
+        </div>
+        <p class="text-slate-400 text-sm font-black uppercase tracking-wider">{{ k.label }}</p>
+        <h3 class="text-3xl font-black text-slate-900 mt-2 transition-all duration-500" [class.blur-lg]="isPrivate() && isSensitive(k.label)">{{ k.value }}</h3>
+      </div>
+    </div>
+  </div>
+
+  <!-- Student Performance Insights Section (NEW) -->
+  <div *ngIf="!isLoading() && stats()?.studentPerformance" class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden animate-in fade-in slide-in-from-bottom-5 duration-700 delay-100">
+      <div class="p-8 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
+        <div>
+          <h3 class="text-xl font-black text-slate-800 tracking-tight flex items-center gap-2">
+            <span class="w-2 h-2 bg-blue-600 rounded-full animate-pulse"></span>
+            رؤى أداء الطلاب وتفاعلهم
+          </h3>
+          <p class="text-slate-400 text-xs font-bold mt-1 uppercase tracking-widest italic">تحليل شامل للتحصيل الدراسي ونسبة المشاركة</p>
+        </div>
+          <div class="flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-xl text-blue-600 text-[10px] font-black">
+            <app-icon name="bar-chart-2" [size]="12" className="ml-1"></app-icon> بيانات حقيقية
+          </div>
+      </div>
+      <div class="p-8">
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8">
+            <!-- Avg Score -->
+            <div class="space-y-3">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center text-xl shadow-sm">
+                    <app-icon name="target" [size]="20"></app-icon>
+                  </div>
+                  <p class="text-[10px] font-black text-slate-400 uppercase tracking-tighter">متوسط الدرجات</p>
+                </div>
+              <div class="flex items-baseline gap-1">
+                <h4 class="text-3xl font-black text-indigo-600 tracking-tighter">{{ stats()?.studentPerformance?.avgExamScore }}%</h4>
+              </div>
+            </div>
+
+            <!-- Exams Count -->
+            <div class="space-y-3 border-r border-slate-50 pr-8">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center text-xl shadow-sm">
+                    <app-icon name="clipboard-list" [size]="20"></app-icon>
+                  </div>
+                  <p class="text-[10px] font-black text-slate-400 uppercase tracking-tighter">امتحانات محلولة</p>
+                </div>
+              <h4 class="text-3xl font-black text-slate-900 tracking-tighter">{{ stats()?.studentPerformance?.examsCount }}</h4>
+            </div>
+
+            <!-- Homeworks -->
+            <div class="space-y-3 border-r border-slate-50 pr-8">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-xl shadow-sm">
+                    <app-icon name="home" [size]="20"></app-icon>
+                  </div>
+                  <p class="text-[10px] font-black text-slate-400 uppercase tracking-tighter">واجبات مُسلمة</p>
+                </div>
+              <h4 class="text-3xl font-black text-slate-900 tracking-tighter">{{ stats()?.studentPerformance?.homeworksCount }}</h4>
+            </div>
+
+            <!-- Lectures -->
+            <div class="space-y-3 border-r border-slate-50 pr-8">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center text-xl shadow-sm">
+                    <app-icon name="video" [size]="20"></app-icon>
+                  </div>
+                  <p class="text-[10px] font-black text-slate-400 uppercase tracking-tighter">محاضرات مُشاهدة</p>
+                </div>
+              <h4 class="text-3xl font-black text-slate-900 tracking-tighter">{{ stats()?.studentPerformance?.lecturesCount }}</h4>
+            </div>
+
+            <!-- Active Days -->
+            <div class="space-y-3 border-r border-slate-50 pr-8">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 bg-rose-50 text-rose-600 rounded-xl flex items-center justify-center text-xl shadow-sm">
+                    <app-icon name="flame" [size]="20"></app-icon>
+                  </div>
+                  <p class="text-[10px] font-black text-slate-400 uppercase tracking-tighter">أيام التفاعل</p>
+                </div>
+              <h4 class="text-3xl font-black text-slate-900 tracking-tighter">{{ stats()?.studentPerformance?.activeDays }} يوم</h4>
+            </div>
+        </div>
+      </div>
+  </div>
+
+  <!-- Main Body Grid -->
+  <div *ngIf="!isLoading() && stats()" class="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in slide-in-from-bottom-6 duration-1000 delay-200">
+    
+    <div class="lg:col-span-2 space-y-8">
+
+      <!-- Analytics Charts Section (Phase 5) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- Revenue Trend Chart -->
+        <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-8">
+          <h3 class="text-xl font-black text-slate-800 mb-6 flex items-center gap-2">
+            <app-icon name="trending-up" [size]="20" className="text-blue-600"></app-icon>
+            إيرادات النظام
+          </h3>
+          <div class="h-64 relative w-full" *ngIf="revenueTrend()">
+            <canvas baseChart
+              [type]="'line'"
+              [datasets]="revenueTrend()!.datasets"
+              [labels]="revenueTrend()!.labels"
+              [options]="lineChartOptions">
+            </canvas>
+          </div>
+          <div *ngIf="!revenueTrend()" class="h-64 flex items-center justify-center text-slate-400 font-bold">
+            جاري التحميل...
+          </div>
+        </div>
+
+        <!-- Student Growth Chart -->
+        <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-8">
+          <h3 class="text-xl font-black text-slate-800 mb-6 flex items-center gap-2">
+            <app-icon name="users" [size]="20" className="text-emerald-600"></app-icon>
+            توزيع الطلاب
+          </h3>
+          <div class="h-64 relative w-full" *ngIf="studentGrowth()">
+            <canvas baseChart
+              [type]="'doughnut'"
+              [datasets]="studentGrowth()!.datasets"
+              [labels]="studentGrowth()!.labels"
+              [options]="doughnutChartOptions">
+            </canvas>
+          </div>
+          <div *ngIf="!studentGrowth()" class="h-64 flex items-center justify-center text-slate-400 font-bold">
+            جاري التحميل...
+          </div>
+        </div>
+      </div>
+      
+      
+      <!-- Activity Feed Section -->
+      <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
+          <div class="p-8 border-b border-slate-50 flex items-center justify-between">
+            <h3 class="text-xl font-black text-slate-800">آخر المستجدات والنشاط</h3>
+            <span class="text-xs font-bold text-slate-400">تحديث لحظي</span>
+          </div>
+          <div class="p-8 space-y-6">
+            <div *ngFor="let a of stats()?.recentActivity" class="flex items-start gap-4 group">
+              <div class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-xl shrink-0 group-hover:scale-110 transition-transform">
+                <app-icon [name]="getActivityIcon(a.icon)" [size]="20" className="text-slate-500"></app-icon>
+              </div>
+              <div class="flex-1 border-b border-slate-50 pb-6 group-last:border-0 group-last:pb-0">
+                <p class="text-slate-700 font-bold leading-relaxed">
+                  {{ a.text }}
+                </p>
+                <div class="flex items-center gap-3 mt-1">
+                  <p class="text-[10px] text-slate-400 font-black uppercase">{{ a.time | date:'yyyy/MM/dd | hh:mm a' }}</p>
+                  <a *ngIf="a.meta?.studentId" [routerLink]="['/students', a.meta.studentId]" class="text-[10px] font-black text-blue-600 hover:underline flex items-center gap-1">عرض الملف <app-icon name="chevron-left" [size]="10"></app-icon></a>
+                </div>
+              </div>
+            </div>
+            <!-- Empty state activity -->
+            <div *ngIf="!stats()?.recentActivity?.length" class="text-center py-12 text-slate-400 font-bold uppercase italic">
+                لا يوجد نشاط مسجل مؤخراً
+            </div>
+          </div>
+      </div>
+
+      <!-- Center Performance Section (Creative Redesign) -->
+      <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
+        <div class="p-8 border-b border-slate-50 flex items-center justify-between">
+          <div>
+            <h3 class="text-xl font-black text-slate-800 tracking-tight">نبض السناتر والأداء</h3>
+            <p class="text-slate-400 text-xs font-bold mt-1">نظرة سريعة على التفاعل الدراسي والالتزام</p>
+          </div>
+          <a routerLink="/centers" class="bg-blue-50/50 text-blue-600 px-4 py-2 rounded-xl text-[10px] font-black hover:bg-blue-600 hover:text-white transition-all flex items-center gap-1">الكل <app-icon name="chevron-left" [size]="10"></app-icon></a>
+        </div>
+        
+        <div class="p-8">
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            <!-- Compact Center Card -->
+            <div *ngFor="let c of mergedCenterStats()" 
+                  class="relative group bg-white rounded-[2.5rem] p-8 transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/10 cursor-pointer overflow-hidden active:scale-95"
+                  [routerLink]="['/centers']"
+            >
+              <!-- Background Glow Decor -->
+              <div class="absolute -right-6 -top-6 w-24 h-24 rounded-full blur-3xl opacity-0 group-hover:opacity-20 transition-opacity"
+                    [class]="c.statusColor.includes('emerald') ? 'bg-emerald-500' : (c.statusColor.includes('amber') ? 'bg-amber-500' : 'bg-red-500')">
+              </div>
+
+              <div class="relative z-10 flex flex-col items-center text-center">
+                <!-- Icon & Name Row -->
+                <div class="w-full flex items-center justify-between mb-8">
+                    <div class="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+                      <app-icon name="building" [size]="20" className="text-slate-400"></app-icon>
+                    </div>
+                    <div class="text-left">
+                      <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">المعدل الدراسي</p>
+                      <p class="text-sm font-black text-blue-600">{{ c.avgExamScore }}%</p>
+                    </div>
+                </div>
+
+                <h4 class="font-black text-slate-800 text-lg leading-tight mb-1">{{ c.centerName }}</h4>
+                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] opacity-40 mb-8 font-sans">طلاب: {{ c.studentsCount }}</p>
+
+                <!-- Circular Progress (Attendance) -->
+                <div class="relative w-32 h-32 mb-2">
+                  <svg class="w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="44" fill="none" class="stroke-slate-100" stroke-width="6" />
+                    <circle cx="50" cy="50" r="44" fill="none" 
+                            class="transition-all duration-1000 ease-out"
+                            [style.stroke]="c.statusColor.includes('emerald') ? '#10b981' : (c.statusColor.includes('amber') ? '#f59e0b' : '#ef4444')"
+                            stroke-width="6"
+                            stroke-linecap="round"
+                            [attr.stroke-dasharray]="2 * 3.14 * 44"
+                            [attr.stroke-dashoffset]="(2 * 3.14 * 44) * (1 - c.attendancePercentage / 100)" />
+                  </svg>
+                  <div class="absolute inset-0 flex flex-col items-center justify-center">
+                    <span class="text-3xl font-black text-slate-900 tracking-tighter">{{ c.attendancePercentage }}%</span>
+                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">التزام</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Hover Meta (Revealed on hover) -->
+              <div class="absolute inset-x-0 bottom-0 p-4 bg-slate-900 text-white transform translate-y-[110%] group-hover:translate-y-0 transition-transform duration-500 flex justify-around items-center rounded-t-3xl shadow-2xl z-20">
+                  <div class="text-center">
+                    <p class="text-[8px] font-black opacity-50 uppercase tracking-widest mb-0.5">حضروا</p>
+                    <p class="text-xs font-black">{{ c.attendedCount }}</p>
+                  </div>
+                  <div class="w-px h-4 bg-white/10 self-center"></div>
+                  <div class="text-center">
+                    <p class="text-[8px] font-black opacity-50 uppercase tracking-widest mb-0.5">الغياب</p>
+                    <p class="text-xs font-black">{{ c.absenceCount }}</p>
+                  </div>
+                  <div class="w-px h-4 bg-white/10 self-center"></div>
+                  <div class="text-center">
+                    <p class="text-[8px] font-black opacity-50 uppercase tracking-widest mb-0.5">الحالة</p>
+                    <p class="text-[10px] font-black" [class]="c.statusColor">{{ c.status }}</p>
+                  </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Empty state centers -->
+          <div *ngIf="!mergedCenterStats().length" class="text-center py-20 px-8">
+              <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 grayscale opacity-50">
+                <app-icon name="building" [size]="32" className="text-slate-200"></app-icon>
+              </div>
+              <h4 class="text-slate-900 font-black mb-1">لا يوجد بيانات حالياً</h4>
+              <p class="text-slate-400 text-sm font-medium italic">سيتم عرض تحليل السناتر هنا بمجرد توفر البيانات</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar Stats -->
+    <div class="space-y-8">
+      
+      <!-- Attendance Insight -->
+      <div class="bg-gradient-to-br from-indigo-900 to-indigo-950 rounded-[2.5rem] shadow-2xl p-8 text-white relative overflow-hidden">
+          <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-blue-500/10 rounded-full blur-3xl"></div>
+          
+          <h3 class="text-lg font-black mb-8 flex items-center gap-2">
+            <app-icon name="flame" [size]="24" className="text-amber-400"></app-icon>
+            تحليل الحضور
+          </h3>
+          
+          <div class="space-y-8">
+            <div class="relative">
+                <div class="flex justify-between items-end mb-2">
+                  <p class="text-indigo-300 text-xs font-black uppercase tracking-tighter">إجمالي سجلات الحضور</p>
+                  <h3 class="text-4xl font-black tracking-tighter">{{ stats()?.attendance?.attendanceThisMonth }}</h3>
+                </div>
+                <div class="h-2 bg-white/10 rounded-full overflow-hidden text-left">
+                  <!-- Theoretical target 100% -->
+                  <div class="h-full bg-blue-400 rounded-full shadow-lg" [style.width.%]="stats() ? ((stats()?.attendance?.uniqueStudentsThisMonth || 0) / (stats()?.kpis?.[0]?.value || 1)) * 100 : 0"></div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 pt-4 border-t border-white/5">
+                <div>
+                  <p class="text-indigo-400 text-[10px] font-black uppercase pb-1">طلاب مفعّلون</p>
+                  <p class="text-xl font-black">{{ stats()?.attendance?.uniqueStudentsThisMonth }}</p>
+                </div>
+                <div class="text-left">
+                  <p class="text-indigo-400 text-[10px] font-black uppercase pb-1">الفلترة الحالية</p>
+                  <p class="text-[10px] font-black opacity-80 decoration-brand">{{ getDateLabel() }}</p>
+                </div>
+            </div>
+          </div>
+      </div>
+
+      <!-- Upcoming Live Sessions Hub -->
+      <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-8 relative overflow-hidden">
+        <div class="absolute -right-4 -top-4 w-24 h-24 bg-rose-50 rounded-full blur-2xl"></div>
+        <div class="relative z-10">
+          <div class="flex items-center justify-between mb-8">
+            <h3 class="text-lg font-black text-slate-800 flex items-center gap-2">
+              <span class="w-2 h-2 bg-rose-500 rounded-full animate-pulse"></span>
+              جلسات لايف قادمة
+            </h3>
+            <span *ngIf="upcomingSessions().length > 0" class="bg-rose-50 text-rose-600 px-3 py-1 rounded-full text-[10px] font-black">{{ upcomingSessions().length }} جلسات</span>
+          </div>
+          
+          <div class="space-y-4">
+            <div *ngFor="let session of upcomingSessions().slice(0, 5)" class="p-5 bg-white rounded-3xl border border-slate-100 hover:border-rose-200 transition-all border-dashed group relative overflow-hidden">
+                <div class="flex justify-between items-center mb-1">
+                  <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{{ session.studentName || session.name }}</span>
+                  <span class="text-[10px] font-black text-rose-600 transition-all duration-500">{{ session.scheduledAt | date:'hh:mm a' }}</span>
+                </div>
+                <p class="text-sm font-bold text-slate-700 truncate mb-4">{{ session.scheduledAt | date:'yyyy/MM/dd' }}</p>
+                
+                <div class="flex items-center gap-2">
+                  <a *ngIf="session.meetLink" [href]="session.meetLink" target="_blank" class="flex-1 bg-rose-50 text-rose-600 border border-rose-100 py-3 rounded-2xl text-[10px] font-black shadow-sm hover:bg-rose-600 hover:text-white transition-all flex items-center justify-center gap-2">
+                    <app-icon name="video" [size]="12"></app-icon> الجلسة
+                  </a>
+                  <a [href]="'https://wa.me/2' + session.phone" target="_blank" class="flex-1 bg-emerald-50 text-emerald-600 border border-emerald-100 py-3 rounded-2xl text-[10px] font-black shadow-sm hover:bg-emerald-600 hover:text-white transition-all flex items-center justify-center gap-2">
+                    <app-icon name="message-square" [size]="12"></app-icon> واتساب
+                  </a>
+                </div>
+            </div>
+
+            <div *ngIf="!upcomingSessions().length" class="text-center py-12 text-slate-400 font-bold uppercase italic border-2 border-dashed border-slate-100 rounded-3xl">
+                لا توجد مواعيد قادمة قريبة
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Manual Payments Hub -->
+      <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-8">
+          <div class="flex items-center justify-between mb-8">
+            <h3 class="text-lg font-black text-slate-800">طلبات الدفع اليدوي</h3>
+            <span class="bg-red-50 text-red-600 px-3 py-1 rounded-full text-[10px] font-black">{{ stats()?.checkoutNotifications?.pendingCount }} طلب</span>
+          </div>
+          
+          <div class="space-y-4">
+            <div *ngFor="let ch of stats()?.checkoutNotifications?.latest" class="p-5 bg-white rounded-3xl border border-slate-100 hover:border-blue-200 transition-all border-dashed group relative overflow-hidden">
+                <div class="flex justify-between items-center mb-1">
+                  <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{{ ch.studentName }}</span>
+                  <span class="text-xs font-black text-emerald-600 transition-all duration-500" [class.blur-md]="isPrivate()">{{ ch.amountCents / 100 }} EGP</span>
+                </div>
+                <p class="text-sm font-bold text-slate-700 truncate mb-4">{{ ch.itemTitle || (ch.type === 'TOPUP' ? 'شحن محفظة' : 'طلب دورة') }}</p>
+                
+                <div class="flex items-center gap-2">
+                  <button 
+                    (click)="selectedReceipt = ch.proofImageUrl"
+                    *ngIf="ch.proofImageUrl"
+                    class="flex-1 bg-slate-50 text-slate-600 border border-slate-100 py-3 rounded-2xl text-[10px] font-black shadow-sm hover:bg-slate-100 transition-all flex items-center justify-center gap-2"
+                  >
+                    <app-icon name="image" [size]="12"></app-icon> الإيصال
+                  </button>
+                  <button 
+                    (click)="onApproveRequest(ch)"
+                    class="flex-1 bg-emerald-50 text-emerald-600 border border-emerald-100 py-3 rounded-2xl text-[10px] font-black shadow-sm hover:bg-emerald-600 hover:text-white transition-all flex items-center justify-center gap-2"
+                  >
+                    قَبول
+                  </button>
+                  <button 
+                    (click)="onRejectRequest(ch)"
+                    class="flex-1 bg-rose-50 text-rose-600 border border-rose-100 py-3 rounded-2xl text-[10px] font-black shadow-sm hover:bg-rose-600 hover:text-white transition-all flex items-center justify-center gap-2"
+                  >
+                    رَفـض
+                  </button>
+                </div>
+            </div>
+
+            <div *ngIf="!stats()?.checkoutNotifications?.latest?.length" class="text-center py-12 text-slate-400 font-bold uppercase italic border-2 border-dashed border-slate-100 rounded-3xl">
+                لا يوجد طلبات معلقة
+            </div>
+          </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- PIN Modal (Custom UI instead of Alert) -->
+  <div *ngIf="showPinModal()" class="fixed inset-0 z-[100] flex items-center justify-center p-6 animate-in fade-in duration-300">
+    <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-md" (click)="closePinModal()"></div>
+    <div class="relative bg-white w-full max-w-sm rounded-[3rem] shadow-2xl p-10 border border-white/20 animate-in zoom-in-95 duration-300 text-center" 
+          [class.animate-shake]="pinError()">
+      
+      <div class="w-20 h-20 bg-slate-50 rounded-[2rem] flex items-center justify-center text-3xl mb-6 mx-auto shadow-inner">
+          <app-icon name="lock" [size]="32" className="text-slate-400"></app-icon>
+      </div>
+      
+      <h3 class="text-2xl font-black text-slate-900 mb-2">تأكيد الهوية</h3>
+      <p class="text-slate-500 text-sm font-medium mb-8">أدخل كلمة السر لإظهار البيانات الحساسة</p>
+      
+      <!-- PIN Dots -->
+      <div class="flex justify-center gap-4 mb-10">
+          <div *ngFor="let i of [0,1,2]" 
+              class="w-5 h-5 rounded-full border-2 transition-all duration-300"
+              [class.bg-slate-900]="enteredPin().length > i"
+              [class.border-slate-200]="enteredPin().length <= i"
+              [class.border-red-500]="pinError()">
+          </div>
+      </div>
+      
+  <!-- Numeric Keypad -->
+        <div class="grid grid-cols-3 gap-4">
+          <button *ngFor="let n of ['1','2','3','4','5','6','7','8','9']" 
+                  (click)="handlePinInput(n)"
+                  class="h-16 rounded-2xl bg-slate-50 text-xl font-black text-slate-800 hover:bg-slate-900 hover:text-white transition-all active:scale-90">
+            {{ n }}
+          </button>
+          <div class="h-16"></div>
+          <button (click)="handlePinInput('0')" class="h-16 rounded-2xl bg-slate-50 text-xl font-black text-slate-800 hover:bg-slate-900 hover:text-white transition-all active:scale-90">0</button>
+          <button (click)="backspacePin()" class="h-16 rounded-2xl bg-white text-xl flex items-center justify-center hover:bg-slate-50 transition-all text-slate-400">
+              <app-icon name="chevron-right" [size]="20"></app-icon>
+          </button>
+        </div>
+
+        <button (click)="closePinModal()" class="mt-8 text-slate-400 text-xs font-black uppercase tracking-widest hover:text-slate-900 transition-colors">إلغاء الأمر</button>
+      </div>
+    </div>
+
+    <!-- Receipt Preview Modal -->
+    <div *ngIf="selectedReceipt" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+      <div class="bg-white rounded-3xl overflow-hidden max-w-2xl w-full relative shadow-2xl animate-in zoom-in duration-300 border border-white/20">
+        <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+          <h3 class="font-black text-slate-800 italic">مراجعة إيصال السداد</h3>
+          <button (click)="selectedReceipt = null" class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-rose-500 hover:text-white transition-all active:scale-90 shadow-sm">✕</button>
+        </div>
+        <div class="p-2 aspect-[4/5] bg-slate-800 overflow-y-auto">
+          <img [src]="selectedReceipt" class="w-full h-auto rounded-lg shadow-inner ring-1 ring-white/10" alt="Payment Proof" />
+        </div>
+        <div class="p-6 bg-slate-50 text-center flex items-center justify-center gap-6">
+          <a [href]="selectedReceipt" target="_blank" class="bg-blue-600 text-white px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-lg hover:bg-blue-700 transition-all flex items-center gap-2">
+            <app-icon name="external-link" [size]="14"></app-icon> عرض بالحجم الكامل
+          </a>
+        </div>
+      </div>
+    </div>
+
+  <!-- Live Session Alert Toast -->
+  <div *ngIf="showAlert()" class="fixed bottom-8 left-8 z-[150] animate-in slide-in-from-bottom-10 fade-in duration-500">
+    <div class="bg-slate-900 text-white rounded-3xl shadow-2xl p-6 flex items-center gap-6 border border-slate-700/50 max-w-md relative overflow-hidden">
+      <!-- Glow effect -->
+      <div class="absolute -right-10 -top-10 w-32 h-32 bg-rose-500/20 blur-3xl rounded-full"></div>
+      
+      <div class="w-14 h-14 bg-rose-500 rounded-2xl flex items-center justify-center shadow-lg shadow-rose-500/20 shrink-0 z-10 animate-pulse">
+        <app-icon name="video" [size]="24"></app-icon>
+      </div>
+      <div class="flex-1 z-10">
+        <h4 class="font-black text-lg text-white mb-1">جلسة لايف اقتربت! 🔴</h4>
+        <p class="text-xs text-slate-300 font-bold leading-relaxed mb-3">
+          جلسة الطالب <span class="text-rose-400 font-black">{{ showAlert()?.studentName || showAlert()?.name }}</span> ستبدأ قريباً.
+        </p>
+        <div class="flex gap-2">
+          <a *ngIf="showAlert()?.meetLink" [href]="showAlert()?.meetLink" target="_blank" class="px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-[10px] font-black transition-colors flex items-center gap-1 shadow-md">
+            <app-icon name="external-link" [size]="12"></app-icon> دخول الاجتماع
+          </a>
+          <button (click)="showAlert.set(null)" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-[10px] font-black transition-colors">إخفاء</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

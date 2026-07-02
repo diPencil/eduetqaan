@@ -1,0 +1,137 @@
+
+    <div class="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <!-- Header Section -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+        <div>
+          <h1 class="text-2xl font-black text-slate-800 tracking-tight italic flex items-center gap-2">
+            <span class="w-1.5 h-8 bg-blue-600 rounded-full"></span>
+            إدارة المديرين والمشرفين
+          </h1>
+          <p class="text-slate-500 font-bold mt-1 mr-3.5 italic leading-relaxed">التحكم في صلاحيات الوصول، أدوار المستخدمين، وتعيينهم للفروع.</p>
+        </div>
+        
+        <button 
+          (click)="openModal()"
+          class="flex items-center justify-center gap-2 px-8 py-4 bg-blue-600 text-white rounded-2xl font-black shadow-xl shadow-blue-200 hover:bg-slate-900 hover:-translate-y-1 active:translate-y-0 transition-all font-sans relative overflow-hidden group"
+        >
+          <app-icon name="plus" [size]="18" className="transition-transform group-hover:rotate-90"></app-icon>
+          إضافة مسؤول جديد
+        </button>
+      </div>
+
+      <!-- Users Grid/Table -->
+      <div *ngIf="isLoading()" class="space-y-4">
+        <div *ngFor="let i of [1,2,3]" class="h-20 bg-white rounded-2xl border border-slate-100 animate-pulse"></div>
+      </div>
+
+      <div *ngIf="!isLoading()" class="grid grid-cols-1 gap-4">
+        <div *ngFor="let user of users()" 
+             class="group bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-2xl hover:shadow-blue-500/5 hover:border-blue-100 transition-all flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
+          
+          <div class="flex items-center gap-5 relative z-10">
+            <div [ngClass]="{
+                  'bg-purple-50 text-purple-600 border-purple-100': user.role === 'admin',
+                  'bg-blue-50 text-blue-600 border-blue-100': user.role === 'supervisor',
+                  'bg-emerald-50 text-emerald-600 border-emerald-100': user.role === 'center_manager',
+                  'bg-amber-50 text-amber-600 border-amber-100': user.role === 'support'
+                 }" 
+                 class="w-16 h-16 rounded-3xl flex items-center justify-center text-2xl font-black border group-hover:scale-110 transition-transform shadow-inner">
+              {{ user.email.charAt(0).toUpperCase() }}
+            </div>
+            <div>
+              <div class="flex items-center gap-3">
+                <h4 class="text-lg font-black text-slate-800 tracking-tight">{{ user.email }}</h4>
+                <span [ngClass]="{
+                        'bg-purple-100 text-purple-600': user.role === 'admin',
+                        'bg-blue-100 text-blue-600': user.role === 'supervisor',
+                        'bg-emerald-100 text-emerald-600': user.role === 'center_manager',
+                        'bg-amber-100 text-amber-600': user.role === 'support'
+                      }" 
+                      class="px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-widest border border-white shadow-sm">
+                  {{ getRoleName(user.role) }}
+                </span>
+              </div>
+              <p class="text-sm text-slate-400 font-bold mt-1 flex items-center gap-2">
+                <span>📅 تاريخ الإنشاء: {{ user.createdAtLocal | date:'shortDate' }}</span>
+                <span *ngIf="getCenterName(user.centerId)" class="bg-slate-100 px-2 py-0.5 rounded text-[10px]">🏢 فرع: {{ getCenterName(user.centerId) }}</span>
+              </p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-6">
+            <!-- Active Toggle -->
+            <div class="flex items-center gap-2">
+              <span [ngClass]="user.isActive ? 'text-emerald-500' : 'text-slate-300'" class="text-xs font-black">{{ user.isActive ? 'نشط' : 'معطل' }}</span>
+              <button (click)="toggleUserStatus(user)" 
+                      [ngClass]="user.isActive ? 'bg-emerald-500' : 'bg-slate-200'"
+                      class="w-12 h-6 rounded-full relative transition-colors">
+                <div [ngClass]="user.isActive ? 'translate-x-6' : 'translate-x-1'" 
+                     class="absolute top-1 left-0 w-4 h-4 bg-white rounded-full transition-transform shadow-sm"></div>
+              </button>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex gap-2">
+               <button (click)="openModal(user)" class="w-11 h-11 bg-white text-blue-600 rounded-xl border border-slate-100 hover:bg-blue-600 hover:text-white transition-all flex items-center justify-center shadow-sm" title="تعديل">
+                  <app-icon name="edit-3" [size]="18"></app-icon>
+               </button>
+               <button (click)="deleteUser(user)" class="w-11 h-11 bg-white text-red-500 rounded-xl border border-slate-100 hover:bg-red-600 hover:text-white transition-all flex items-center justify-center shadow-sm" title="حذف">
+                  <app-icon name="trash-2" [size]="18"></app-icon>
+               </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="!isLoading() && users().length === 0" class="flex flex-col items-center justify-center py-24 bg-white rounded-[40px] border-2 border-dashed border-slate-100">
+        <span class="text-7xl mb-6">🛡️</span>
+        <h3 class="text-xl font-black text-slate-800">لا يوجد مديرين مضافين</h3>
+        <p class="text-slate-400 mt-2 font-medium">ابدأ بإضافة أول مشرف لإدارة لوحة التحكم.</p>
+        <button (click)="openModal()" class="mt-8 px-10 py-4 bg-blue-600 text-white rounded-2xl font-black hover:bg-blue-700 transition-all shadow-lg shadow-blue-100">إضافة مسؤول الآن</button>
+      </div>
+
+      <!-- MODAL -->
+      <div *ngIf="isModalOpen()" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-300">
+        <div class="bg-white w-full max-w-xl rounded-[40px] shadow-2xl overflow-hidden border border-white/20 animate-in zoom-in-95 duration-500">
+          <div class="p-8 pb-4 flex items-center justify-between">
+            <h3 class="text-2xl font-black text-slate-800">{{ isEditing() ? 'تعديل بيانات المسؤول' : 'إضافة مسؤول جديد' }}</h3>
+            <button (click)="closeModal()" class="w-10 h-10 bg-slate-50 text-slate-400 rounded-full flex items-center justify-center hover:bg-red-50 hover:text-red-500 transition-all font-black">✕</button>
+          </div>
+
+          <div class="p-8 pt-4">
+            <form [formGroup]="userForm" (ngSubmit)="saveUser()" class="space-y-5">
+              <div class="space-y-2">
+                <label class="text-xs font-black text-slate-400 uppercase tracking-widest mr-2">البريد الإلكتروني *</label>
+                <input type="email" formControlName="email" placeholder="email@example.com" 
+                       class="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-bold" />
+              </div>
+
+              <div class="space-y-2">
+                <label class="text-xs font-black text-slate-400 uppercase tracking-widest mr-2">{{ isEditing() ? 'كلمة السر الجديدة (اتركه فارغاً للحفظ)' : 'كلمة السر *' }}</label>
+                <input type="password" formControlName="password" placeholder="••••••••" 
+                       class="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-bold" />
+              </div>
+
+              <div class="space-y-2">
+                <label class="text-xs font-black text-slate-400 uppercase tracking-widest mr-2">الدور / الصلاحية *</label>
+                <select formControlName="role" class="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-blue-500/10 outline-none font-bold appearance-none">
+                  <option value="admin">مدير نظام (Admin)</option>
+                  <option value="supervisor">مشرف عام (Supervisor)</option>
+                  <option value="center_manager">مشرف سنتر (Center Manager)</option>
+                  <option value="support">دعم فني (Support)</option>
+                </select>
+              </div>
+
+              <div class="flex flex-col gap-4 pt-6">
+                <button type="submit" [disabled]="userForm.invalid || isSaving()"
+                        class="w-full py-4.5 bg-blue-600 text-white rounded-2xl font-black shadow-xl shadow-blue-100 hover:bg-blue-700 disabled:opacity-50 transition-all font-sans">
+                  {{ isSaving() ? 'جاري الحفظ...' : (isEditing() ? 'تحديث البيانات' : 'إنشاء الحساب') }}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  

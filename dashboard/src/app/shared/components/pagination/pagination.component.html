@@ -1,0 +1,32 @@
+
+    <div class="p-8 bg-slate-50 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-6" dir="rtl">
+      <div class="flex items-center gap-4">
+        <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-white px-4 py-2 rounded-lg border border-slate-200 shadow-sm">
+          إجمالي النتائج: {{ total }}
+        </div>
+      </div>
+      
+      <div class="flex items-center gap-4">
+        <button (click)="onPageChange(page - 1)" [disabled]="page <= 1" 
+                class="px-5 py-2.5 rounded-xl bg-white border border-slate-200 text-xs font-black hover:bg-slate-50 disabled:opacity-30 transition-all shadow-sm flex items-center gap-2">
+          <span>السابق</span>
+        </button>
+        
+        <div class="flex items-center gap-2">
+           <ng-container *ngFor="let p of [].constructor(totalPages); let i = index">
+             <button (click)="onPageChange(i + 1)"
+                     *ngIf="i + 1 >= page - 2 && i + 1 <= page + 2"
+                     [ngClass]="page === i + 1 ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30' : 'bg-white text-slate-500 border border-slate-100 hover:bg-slate-50'"
+                     class="w-10 h-10 rounded-xl text-xs font-black transition-all">
+                {{ i + 1 }}
+             </button>
+           </ng-container>
+        </div>
+
+        <button (click)="onPageChange(page + 1)" [disabled]="page >= totalPages" 
+                class="px-5 py-2.5 rounded-xl bg-white border border-slate-200 text-xs font-black hover:bg-slate-50 disabled:opacity-30 transition-all shadow-sm flex items-center gap-2">
+          <span>التالي</span>
+        </button>
+      </div>
+    </div>
+  

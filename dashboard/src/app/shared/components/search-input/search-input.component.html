@@ -1,0 +1,16 @@
+
+    <div class="relative w-full">
+      <input
+        type="text"
+        [placeholder]="placeholder"
+        [ngModel]="value"
+        (ngModelChange)="onValueChange($event)"
+        class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-10 text-sm focus:ring-2 focus:ring-blue-500 transition-all font-bold text-slate-800 placeholder:text-slate-400 outline-none shadow-sm"
+      />
+      <app-icon name="search" [size]="14" className="absolute right-3 top-3.5 text-slate-400"></app-icon>
+      
+      <button *ngIf="value" (click)="clear()" class="absolute left-3 top-3.5 text-slate-400 hover:text-slate-600 transition-colors">
+        <app-icon name="x" [size]="14"></app-icon>
+      </button>
+    </div>
+  

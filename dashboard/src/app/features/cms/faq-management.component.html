@@ -1,0 +1,196 @@
+
+    <div class="space-y-6 font-sans pb-20" dir="rtl">
+      <!-- Header Section -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 class="text-2xl font-black text-slate-800 tracking-tight italic flex items-center gap-2">
+            <span class="w-1.5 h-8 bg-blue-600 rounded-full"></span>
+            إدارة الأسئلة الشائعة
+          </h1>
+          <p class="text-slate-500 font-bold mt-1 mr-3.5 italic">تخصيص محتوى المساعدة والإجابات النموذجية للطلاب.</p>
+        </div>
+        
+        <button (click)="openAddModal()" class="bg-blue-600 text-white px-8 py-3.5 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-700 hover:-translate-y-1 transition-all shadow-xl shadow-blue-600/20 flex items-center gap-2 group">
+          <app-icon name="plus" [size]="18" className="transition-transform group-hover:rotate-90"></app-icon>
+          إضافة سؤال جديد
+        </button>
+      </div>
+
+      <!-- Filters & Stats -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="md:col-span-2 bg-white p-2 rounded-[40px] border border-slate-100 shadow-sm flex items-center gap-2">
+          <div class="relative flex-1 group">
+            <input 
+              type="text" 
+              [(ngModel)]="searchQuery"
+              (input)="loadFaqs()"
+              placeholder="بحث في الأسئلة والإجابات..."
+              class="w-full bg-slate-50 border-none rounded-[32px] px-6 py-3 pr-12 text-sm font-bold focus:ring-4 focus:ring-blue-500/10 outline-none transition-all"
+            >
+            <app-icon name="search" [size]="18" className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-500 transition-colors"></app-icon>
+          </div>
+          <select 
+            [(ngModel)]="filterCategory"
+            (change)="loadFaqs()"
+            class="bg-slate-50 border-none rounded-[32px] px-6 py-3 text-sm font-bold outline-none cursor-pointer"
+          >
+            <option value="">جميع التصنيفات</option>
+            <option value="general">عام</option>
+            <option value="technical">تقني</option>
+            <option value="payments">المدفوعات</option>
+            <option value="educational">تعليمي</option>
+          </select>
+        </div>
+
+        <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-4">
+          <div class="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-500">
+            <app-icon name="check-circle" [size]="24"></app-icon>
+          </div>
+          <div>
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">منشور</p>
+            <h4 class="text-2xl font-black text-slate-800">{{ publishedCount() }}</h4>
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-4">
+          <div class="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-500">
+            <app-icon name="edit-2" [size]="24"></app-icon>
+          </div>
+          <div>
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">مسودة</p>
+            <h4 class="text-2xl font-black text-slate-800">{{ draftCount() }}</h4>
+          </div>
+        </div>
+      </div>
+
+      <!-- FAQ List -->
+      <div class="space-y-4">
+        <div *ngIf="isLoading()" class="py-20 flex flex-col items-center justify-center gap-4">
+           <div class="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+           <p class="text-slate-400 font-bold italic anim-pulse">جاري تحميل الأسئلة...</p>
+        </div>
+
+        <div *ngFor="let faq of faqs()" class="bg-white rounded-[40px] border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-slate-200/50 hover:border-blue-100 transition-all group overflow-hidden">
+          <div class="p-8 flex flex-col md:flex-row md:items-start justify-between gap-6">
+            <div class="flex-1 space-y-3">
+              <div class="flex items-center gap-3">
+                <span [ngClass]="faq.status === 'published' ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-500'" class="px-3 py-1 rounded-xl text-[9px] font-black uppercase tracking-widest italic">
+                  {{ faq.status === 'published' ? 'منشور' : 'مسودة' }}
+                </span>
+                <span *ngIf="faq.category" class="text-[10px] font-black text-blue-500 uppercase tracking-tighter opacity-60">#{{ faq.category }}</span>
+              </div>
+              <h3 class="text-xl font-black text-slate-800 leading-tight">{{ faq.questionText }}</h3>
+              <p class="text-slate-500 font-bold leading-relaxed whitespace-pre-wrap">{{ faq.answerText }}</p>
+            </div>
+
+            <div class="flex items-center gap-2 md:self-start">
+              <button (click)="openEditModal(faq)" class="w-11 h-11 bg-white border border-slate-100 rounded-2xl flex items-center justify-center text-slate-400 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all shadow-sm">
+                <app-icon name="edit-3" [size]="20"></app-icon>
+              </button>
+              <button (click)="onDelete(faq.id)" class="w-11 h-11 bg-white border border-slate-100 rounded-2xl flex items-center justify-center text-slate-300 hover:text-rose-500 hover:border-rose-100 transition-all shadow-sm">
+                <app-icon name="trash-2" [size]="20"></app-icon>
+              </button>
+            </div>
+          </div>
+          
+          <div class="px-8 py-3 bg-slate-50/50 border-t border-slate-50 flex items-center justify-between">
+            <div class="flex items-center gap-4 text-[10px] font-black text-slate-400">
+              <span class="flex items-center gap-1.5"><app-icon name="hash" [size]="10"></app-icon> ترتيب: {{ faq.orderIndex }}</span>
+              <span class="flex items-center gap-1.5"><app-icon name="calendar" [size]="10"></app-icon> آخر تحديث: {{ faq.updatedAtLocal | date:'yyyy/MM/dd' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="faqs().length === 0 && !isLoading()" class="py-32 bg-slate-50/30 rounded-[40px] border-2 border-dashed border-slate-100 flex flex-col items-center justify-center text-center">
+          <div class="w-24 h-24 bg-white rounded-[32px] shadow-sm flex items-center justify-center text-slate-300 mb-6 border border-slate-50">
+             <app-icon name="help-circle" [size]="48" className="opacity-20"></app-icon>
+          </div>
+          <h3 class="text-xl font-black text-slate-800 italic">لا توجد أسئلة شائعة</h3>
+          <p class="text-slate-400 font-bold mt-1">ابدأ بإضافة أول سؤال لمساعدة طلابك.</p>
+        </div>
+      </div>
+
+      <!-- Add/Edit Modal -->
+      <div *ngIf="showModal()" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+        <div class="bg-white rounded-[32px] shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in duration-300 border border-white/20">
+          <div class="px-8 py-6 flex items-center justify-between border-b border-slate-50 bg-slate-50/50">
+            <div class="flex items-center gap-3">
+              <div class="w-1.5 h-6 bg-blue-600 rounded-full"></div>
+              <h3 class="text-xl font-black text-slate-800 italic tracking-tight">{{ isEditing() ? 'تعديل السؤال' : 'إضافة سؤال جديد' }}</h3>
+            </div>
+            <button (click)="showModal.set(false)" class="w-10 h-10 bg-white text-slate-400 rounded-full flex items-center justify-center hover:bg-rose-50 hover:text-rose-500 transition-all shadow-sm font-black">✕</button>
+          </div>
+
+          <div class="px-10 py-8 space-y-6 max-h-[70vh] overflow-y-auto scrollbar-hide">
+            <div class="space-y-2">
+              <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] mr-2">نص السؤال</label>
+              <input 
+                type="text" 
+                [(ngModel)]="formData.questionText"
+                placeholder="مثلاً: كيف أقوم بتفعيل الكود الخاص بي؟"
+                class="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl px-6 py-4 font-black text-sm focus:border-blue-500 focus:bg-white outline-none transition-all shadow-inner"
+              >
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] mr-2">الإجابة</label>
+              <textarea 
+                [(ngModel)]="formData.answerText"
+                rows="6" 
+                placeholder="اكتب الإجابة المفصلة هنا..."
+                class="w-full bg-slate-50 border-2 border-slate-50 rounded-[30px] px-6 py-5 font-bold text-sm focus:border-blue-500 focus:bg-white outline-none transition-all shadow-inner resize-none"
+              ></textarea>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div class="space-y-2">
+                <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] mr-2">التصنيف</label>
+                <select [(ngModel)]="formData.category" class="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl px-6 py-4 font-black text-sm outline-none cursor-pointer focus:bg-white focus:border-blue-500 transition-all">
+                  <option value="general">عام</option>
+                  <option value="technical">تقني</option>
+                  <option value="payments">مدفوعات</option>
+                  <option value="educational">تعليمي</option>
+                </select>
+              </div>
+              <div class="space-y-2">
+                <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] mr-2">ترتيب الظهور</label>
+                <input 
+                  type="number" 
+                  [(ngModel)]="formData.orderIndex"
+                  class="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl px-6 py-4 font-black text-sm outline-none focus:bg-white focus:border-blue-500 transition-all shadow-inner"
+                >
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] mr-2">الحالة</label>
+              <div class="flex gap-4">
+                <button 
+                  (click)="formData.status = 'published'"
+                  [ngClass]="formData.status === 'published' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/20' : 'bg-slate-100 text-slate-500'"
+                  class="flex-1 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all"
+                >
+                  منشور للطلاب
+                </button>
+                <button 
+                  (click)="formData.status = 'draft'"
+                  [ngClass]="formData.status === 'draft' ? 'bg-slate-700 text-white shadow-lg shadow-slate-500/20' : 'bg-slate-100 text-slate-500'"
+                  class="flex-1 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all"
+                >
+                  حفظ كمسودة
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-8 bg-slate-100/30 border-t border-slate-100 flex justify-end gap-3">
+             <button (click)="showModal.set(false)" class="px-8 py-4 font-black text-slate-400 hover:text-slate-600 text-xs tracking-widest">إلغاء</button>
+             <button (click)="onSave()" [disabled]="isSaving()" class="bg-blue-600 text-white px-10 py-4 rounded-3xl font-black shadow-2xl shadow-blue-600/30 hover:bg-slate-900 hover:-translate-y-1 transition-all disabled:opacity-50 text-xs flex items-center gap-2">
+               <app-icon name="check" [size]="18" *ngIf="!isSaving()"></app-icon>
+               {{ isSaving() ? 'جاري الحفظ...' : (isEditing() ? 'تحديث السؤال الآن' : 'إنشاء السؤال الآن') }}
+             </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  

@@ -1,0 +1,143 @@
+<div class="min-h-screen bg-slate-50 p-4 md:p-8 font-cairo" dir="rtl">
+    <!-- Header -->
+    <div class="max-w-5xl mx-auto mb-8 relative">
+       <div class="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 rounded-3xl blur-3xl"></div>
+       <div class="relative bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div class="flex items-center gap-5">
+             <div class="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-200">
+                <i class="ri-trophy-fill text-3xl text-white"></i>
+             </div>
+             <div>
+                <h1 class="text-3xl font-black text-slate-800 tracking-tight mb-2">إعدادات نظام المكافآت</h1>
+                <p class="text-sm font-bold text-slate-500">تحكم في نسب النقاط وقيمتها والمكافآت الممنوحة للطلاب.</p>
+             </div>
+          </div>
+          <button (click)="saveSettings()" [disabled]="isSaving()" class="bg-slate-900 text-white px-8 py-3.5 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 flex items-center gap-3 group disabled:opacity-50">
+             <span *ngIf="isSaving()" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+             <span>حفظ الإعدادات</span>
+             <i class="ri-save-3-line text-lg transition-transform group-hover:scale-110"></i>
+          </button>
+       </div>
+    </div>
+ 
+    <div class="max-w-5xl mx-auto" *ngIf="!isLoading() && settings(); else loadingTpl">
+       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- General State -->
+          <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-between">
+             <div>
+                 <div class="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center mb-6">
+                    <i class="ri-toggle-fill text-2xl text-slate-400"></i>
+                 </div>
+                 <h3 class="text-xl font-black text-slate-800 mb-2">حالة النظام</h3>
+                 <p class="text-xs font-bold text-slate-500 leading-relaxed mb-6">تفعيل أو تعطيل نظام المكافآت والنقاط بالكامل للطلاب في المنصة.</p>
+             </div>
+             <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" [(ngModel)]="settings()!.isActive" class="sr-only peer">
+                <div class="w-14 h-7 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-emerald-500"></div>
+                <span class="mr-4 text-sm font-black" [class.text-emerald-600]="settings()!.isActive" [class.text-slate-400]="!settings()!.isActive">
+                   {{ settings()!.isActive ? 'مُفعل' : 'مُعطل' }}
+                </span>
+             </label>
+          </div>
+ 
+          <!-- Ratio Settings -->
+          <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+             <div class="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center mb-6">
+                <i class="ri-exchange-dollar-line text-2xl text-amber-500"></i>
+             </div>
+             <h3 class="text-xl font-black text-slate-800 mb-2">قيمة النقاط المادية</h3>
+             <p class="text-xs font-bold text-slate-500 leading-relaxed mb-6">كم تساوي النقطة الواحدة عند تحويلها لجنيه؟</p>
+             
+             <div class="relative">
+                <input type="number" [(ngModel)]="settings()!.pointToEgpRatio" step="0.1" class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-4 text-slate-800 font-bold focus:outline-none focus:border-amber-500 focus:bg-white transition-all text-left" dir="ltr">
+                <span class="absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 font-black text-sm">جنيه / نقطة</span>
+             </div>
+             <p class="text-[10px] text-amber-600 font-bold mt-3 bg-amber-50 px-3 py-2 rounded-lg border border-amber-100">
+                 مثال: إذا كانت القيمة 0.5، فإن 100 نقطة تساوي 50 جنيهاً.
+             </p>
+          </div>
+ 
+          <!-- Points for Wallet TX -->
+          <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+             <div class="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center mb-6">
+                <i class="ri-wallet-3-fill text-2xl text-emerald-500"></i>
+             </div>
+             <h3 class="text-xl font-black text-slate-800 mb-2">النقاط مقابل الشحن</h3>
+             <p class="text-xs font-bold text-slate-500 leading-relaxed mb-6">عدد النقاط المكتسبة لكل جنيه يتم إضافته في المحفظة.</p>
+             
+             <div class="relative">
+                <input type="number" [(ngModel)]="settings()!.pointsPerEgp" step="0.1" class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-4 text-slate-800 font-bold focus:outline-none focus:border-emerald-500 focus:bg-white transition-all text-left" dir="ltr">
+                <span class="absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 font-black text-sm">نقطة / جنيه</span>
+             </div>
+          </div>
+ 
+          <!-- Points for Full Mark -->
+          <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+             <div class="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center mb-6">
+                <i class="ri-medal-fill text-2xl text-blue-500"></i>
+             </div>
+             <h3 class="text-xl font-black text-slate-800 mb-2">تقفيل الامتحانات</h3>
+             <p class="text-xs font-bold text-slate-500 leading-relaxed mb-6">عدد النقاط كمكافأة للطالب عند الحصول على الدرجة النهائية.</p>
+             
+             <div class="relative">
+                <input type="number" [(ngModel)]="settings()!.pointsForFullMark" class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-4 text-slate-800 font-bold focus:outline-none focus:border-blue-500 focus:bg-white transition-all text-left" dir="ltr">
+                <span class="absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 font-black text-sm">نقطة</span>
+             </div>
+          </div>
+ 
+          <!-- Points for Video -->
+          <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+             <div class="w-12 h-12 bg-purple-50 rounded-2xl flex items-center justify-center mb-6">
+                <i class="ri-play-circle-fill text-2xl text-purple-500"></i>
+             </div>
+             <h3 class="text-xl font-black text-slate-800 mb-2">مشاهدة الحصص</h3>
+             <p class="text-xs font-bold text-slate-500 leading-relaxed mb-6">عدد النقاط الممنوحة عند إكمال مشاهدة حصة بالكامل.</p>
+             
+             <div class="relative">
+                <input type="number" [(ngModel)]="settings()!.pointsForVideoComplete" class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-4 text-slate-800 font-bold focus:outline-none focus:border-purple-500 focus:bg-white transition-all text-left" dir="ltr">
+                <span class="absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 font-black text-sm">نقطة</span>
+             </div>
+          </div>
+ 
+          <!-- Points for Attendance -->
+          <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+             <div class="w-12 h-12 bg-pink-50 rounded-2xl flex items-center justify-center mb-6">
+                <i class="ri-user-follow-fill text-2xl text-pink-500"></i>
+             </div>
+             <h3 class="text-xl font-black text-slate-800 mb-2">الحضور للسنتر</h3>
+             <p class="text-xs font-bold text-slate-500 leading-relaxed mb-6">عدد النقاط الممنوحة عند تسجيل الحضور في السنتر.</p>
+             
+             <div class="relative">
+                <input type="number" [(ngModel)]="settings()!.pointsForAttendance" class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-6 py-4 text-slate-800 font-bold focus:outline-none focus:border-pink-500 focus:bg-white transition-all text-left" dir="ltr">
+                <span class="absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 font-black text-sm">نقطة</span>
+             </div>
+          </div>
+       </div>
+    </div>
+ 
+    <ng-template #loadingTpl>
+       <div class="flex items-center justify-center py-20">
+          <div class="w-10 h-10 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
+       </div>
+    </ng-template>
+ </div>
+ 
+ <!-- Status Modal -->
+ <div *ngIf="statusModal()" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm px-4">
+    <div class="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl animate-scale-in">
+       <div class="w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-6"
+          [class.bg-emerald-50]="statusType() === 'success'"
+          [class.bg-red-50]="statusType() === 'error'">
+          <i class="text-4xl"
+             [class.ri-checkbox-circle-fill]="statusType() === 'success'"
+             [class.text-emerald-500]="statusType() === 'success'"
+             [class.ri-close-circle-fill]="statusType() === 'error'"
+             [class.text-red-500]="statusType() === 'error'"></i>
+       </div>
+       <h3 class="text-xl font-black text-slate-800 mb-2">
+          {{ statusType() === 'success' ? 'نجاح!' : 'خطأ!' }}
+       </h3>
+       <p class="text-sm font-bold text-slate-500">{{ statusMessage() }}</p>
+    </div>
+ </div>
+ 
