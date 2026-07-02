@@ -1,0 +1,27 @@
+node_modules/
+**/node_modules/
+
+# env
+.env
+.env.*
+**/.env
+**/.env.*
+!.env.example
+
+# build outputs
+dist/
+build/
+.next/
+out/
+coverage/
+
+# logs
+*.log
+
+# OS and editor
+.DS_Store
+.vscode/
+.idea/
+
+# agents
+.agents/
