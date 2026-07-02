@@ -2316,6 +2316,46 @@ select.input-clay option {
 
 @media (max-width: 768px) { 
   .hero-title-mobile { font-size: 1.5rem !important; } 
-  .hero-lottie-wrapper { flex: 1 1 100% !important; display: flex !important; justify-content: center !important; width: 100% !important; } 
-  .hero-lottie-inner { transform: scale(2.2) !important; margin-top: 20px !important; } 
+  .hero-lottie-wrapper { flex: 1 1 100% !important; display: flex !important; justify-content: center !important; width: 100% !important; height: 160px !important; margin-bottom: -10px !important; } 
+  .hero-lottie-inner { transform: scale(2.2) translateY(-20px) !important; margin-top: 0 !important; } 
+}
+
+/* Mobile Sliders for Cards */
+@media (max-width: 768px) {
+  .mobile-slider {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    scroll-snap-type: x mandatory;
+    gap: 15px !important;
+    padding-bottom: 20px;
+    margin: 0 -24px;
+    padding-left: 24px;
+    padding-right: 24px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .mobile-slider::-webkit-scrollbar {
+    display: none;
+  }
+  .mobile-slider > div {
+    flex: 0 0 85% !important;
+    min-width: 85% !important;
+    scroll-snap-align: center;
+  }
+}
+
+/* Secondary Theme for Recommended Cards */
+.theme-secondary .uiverse-bottom-card {
+  background-color: var(--secondary) !important;
+}
+.theme-secondary .uiverse-bottom-card::before {
+  box-shadow: 0 10px 0 0 var(--secondary) !important;
+}
+.theme-secondary .uiverse-card-btn {
+  color: #ffffff !important;
+}
+.theme-secondary .uiverse-card-btn:hover {
+  color: var(--secondary) !important;
+  background-color: #ffffff !important;
 }

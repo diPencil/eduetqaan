@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import SimpleFooter from '../components/SimpleFooter';
@@ -35,6 +35,24 @@ export default function CourseDetail() {
   const [hasOwnership, setHasOwnership] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  
+  const [showStickySubscribe, setShowStickySubscribe] = useState(false);
+  const subscribeCardRef = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        // Show sticky bar only when the card is NOT intersecting (visible)
+        setShowStickySubscribe(!entry.isIntersecting);
+      },
+      { root: null, threshold: 0.1 }
+    );
+
+    if (subscribeCardRef.current) observer.observe(subscribeCardRef.current);
+    return () => {
+      if (subscribeCardRef.current) observer.unobserve(subscribeCardRef.current);
+    };
+  }, [loading]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -131,12 +149,12 @@ export default function CourseDetail() {
             <ChevronLeft size={18} />
             <span>رجوع</span>
           </button>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(16,185,129,0.1)', padding: '6px 14px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '700', color: 'var(--accent)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(16,185,129,0.1)', padding: '6px 14px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '700', color: 'var(--accent)', whiteSpace: 'nowrap' }}>
               <ShieldCheck size={14} />
               <span>اتصال آمن ومشفّر</span>
             </div>
-            <span style={{ background: 'rgba(234,88,12,0.1)', padding: '4px 10px', borderRadius: '8px', fontSize: '0.7rem', fontWeight: '700', color: 'var(--primary)' }}>SSL Secured</span>
+            <span style={{ background: 'rgba(234,88,12,0.1)', padding: '4px 10px', borderRadius: '8px', fontSize: '0.7rem', fontWeight: '700', color: 'var(--primary)', whiteSpace: 'nowrap' }}>SSL Secured</span>
           </div>
         </div>
       </div>
@@ -312,7 +330,7 @@ export default function CourseDetail() {
 
           {/* Right Column: Sticky Purchase Card */}
           <div style={{ position: 'sticky', top: '80px' }}>
-            <div className="card-clay" style={{
+            <div ref={subscribeCardRef} className="card-clay" style={{
               padding: '0', overflow: 'hidden',
               border: '2px solid var(--border-color)'
             }}>
@@ -434,6 +452,33 @@ export default function CourseDetail() {
         </div>
       </div>
       <SimpleFooter />
+      
+      {/* Mobile Sticky Subscribe Bar */}
+      {showStickySubscribe && !hasOwnership && !loading && (
+        <div className="mobile-only-btn" style={{
+          display: 'none', // Overridden by mobile-only-btn on mobile
+          position: 'fixed', bottom: 0, left: 0, right: 0,
+          background: 'var(--bg-surface)', borderTop: '2px solid var(--border-color)',
+          padding: '12px 24px', zIndex: 1000,
+          alignItems: 'center', justifyContent: 'space-between',
+          boxShadow: '0 -10px 25px rgba(0,0,0,0.06)'
+        }}>
+          <div>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', fontWeight: '700', marginBottom: '2px' }}>قيمة الاشتراك</span>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', color: 'var(--text-main)' }}>
+              <strong style={{ fontSize: '1.4rem', fontWeight: '900' }}>{price}</strong>
+              <span style={{ fontSize: '0.8rem', fontWeight: '700' }}>ج.م</span>
+            </div>
+          </div>
+          <button
+            onClick={() => navigate(`/checkout/${course.id}`)}
+            className="btn-premium"
+            style={{ padding: '10px 24px', fontSize: '0.95rem' }}
+          >
+            اشتراك الآن
+          </button>
+        </div>
+      )}
     </div>
   );
 }

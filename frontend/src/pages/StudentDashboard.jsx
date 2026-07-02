@@ -623,12 +623,12 @@ export default function StudentDashboard() {
                         <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '4px', margin: 0 }}>تصفح المناهج والحصص المتاحة للشراء أو الاشتراك فوراً</p>
                       </div>
                     </div>
-                    <button onClick={() => setActiveTab('lectures')} style={{ color: 'var(--primary)', background: 'none', border: 'none', fontWeight: '800', cursor: 'pointer', fontSize: '0.9rem' }}>
+                    <button onClick={() => setActiveTab('lectures')} className="hide-on-mobile" style={{ color: 'var(--primary)', background: 'none', border: 'none', fontWeight: '800', cursor: 'pointer', fontSize: '0.9rem' }}>
                       شاهد الكل
                     </button>
                   </div>
 
-                  <div className="grid-cards">
+                  <div className="grid-cards mobile-slider">
                     {(() => {
                       const studentYearNorm = (student?.year || '').replace(/أ|إ|آ/g, 'ا').trim();
                       let matched = showcaseCourses.filter(c => {
@@ -670,6 +670,11 @@ export default function StudentDashboard() {
                     ));
                   })()}
                   </div>
+                  
+                  {/* Mobile-only "View All" button below the slider */}
+                  <button onClick={() => setActiveTab('lectures')} className="mobile-only-btn" style={{ width: '100%', padding: '12px', background: 'rgba(234, 88, 12, 0.08)', color: 'var(--primary)', border: '1px solid rgba(234, 88, 12, 0.2)', borderRadius: '12px', fontWeight: '800', fontSize: '0.95rem', marginTop: '5px', display: 'none', justifyContent: 'center', alignItems: 'center' }}>
+                    شاهد كل المحاضرات
+                  </button>
                 </div>
 
                 {/* Section 2: Recommended/Latest Lectures */}
@@ -682,7 +687,7 @@ export default function StudentDashboard() {
                     </div>
                   </div>
 
-                  <div className="grid-cards">
+                  <div className="grid-cards mobile-slider">
                     {(() => {
                       const studentYearNorm = (student?.year || '').replace(/أ|إ|آ/g, 'ا').trim();
                       let matched = showcaseCourses.filter(c => {
@@ -697,7 +702,7 @@ export default function StudentDashboard() {
                       }
 
                       return recommended.map((course, idx) => (
-                        <div key={'rec-' + course.id} className="uiverse-course-card">
+                        <div key={'rec-' + course.id} className="uiverse-course-card theme-secondary">
                           <div className="uiverse-top-card">
                             <img src={course.imageUrl} alt={course.title} />
                             <span className="badge badge-primary" style={{ position: 'absolute', top: '15px', right: '15px', fontWeight: '800', zIndex: 5 }}>

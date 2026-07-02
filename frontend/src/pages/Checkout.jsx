@@ -277,23 +277,24 @@ export default function Checkout() {
             </button>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <h2 style={{ fontSize: '1.2rem', fontWeight: '900', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'var(--primary)', animation: 'pulse-dot 2s infinite' }}></span>
               تأكيد الدفع
             </h2>
             <style>{`@keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }`}</style>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)' }}>
-              <ShieldCheck size={14} style={{ color: 'var(--accent)' }} />
-              <span>اتصال آمن ومشفّر</span>
-            </div>
+            
             <div style={{ display: 'flex', gap: '6px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', whiteSpace: 'nowrap', padding: '3px 8px' }}>
+                <ShieldCheck size={14} style={{ color: 'var(--accent)' }} />
+                <span>اتصال آمن ومشفّر</span>
+              </div>
               {['3D Secure', 'SSL Secured', 'PCI DSS'].map((b, i) => (
-                <span key={i} style={{
+                <span key={i} className="hide-on-mobile" style={{
                   background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.15)',
                   padding: '3px 8px', borderRadius: '6px', fontSize: '0.65rem',
                   fontWeight: '700', color: 'var(--accent)',
-                  display: 'flex', alignItems: 'center', gap: '3px'
+                  display: 'flex', alignItems: 'center', gap: '3px', whiteSpace: 'nowrap'
                 }}>
                   <span style={{ fontWeight: '900', color: 'var(--accent)' }}>✓</span> {b}
                 </span>
