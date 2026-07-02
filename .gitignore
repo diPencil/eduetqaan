@@ -34,3 +34,29 @@ coverage/
 backend/data/*.sqlite
 backend/data/*.sqlite3
 backend/data/*.db
+
+# Node modules
+node_modules/
+**/node_modules/
+
+# Environment files
+.env
+.env.*
+**/.env
+**/.env.*
+!.env.example
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+coverage/
+
+# Logs
+*.log
+
+# OS and editor
+.DS_Store
+.vscode/
+.idea/

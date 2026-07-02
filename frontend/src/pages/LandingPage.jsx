@@ -9,6 +9,7 @@ import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import CinematicFooter from '../components/CinematicFooter';
+import MobileBottomNav from '../components/MobileBottomNav';
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -985,6 +986,7 @@ export default function LandingPage() {
       </section>
 
       <CinematicFooter />
+      <MobileBottomNav />
 
     </div>
   );

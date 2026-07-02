@@ -19,7 +19,7 @@ export default function SimpleFooter() {
       <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '700' }}>
         © {year} منصة إتقان — مستر مصطفى الصباغ. جميع الحقوق محفوظة.
       </span>
-      <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+      <div className="hide-on-mobile" style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
         <a
           href="https://wa.me/201000000000"
           target="_blank"

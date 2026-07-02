@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { 
   BookOpen, Video, FileText, Award, Wallet, 
   ArrowLeft, ChevronDown, CheckCircle2, 
-  Sun, Moon, QrCode, LogOut, User, AlertCircle, Send, DollarSign, Calendar, Search
+  Sun, Moon, QrCode, LogOut, User, AlertCircle, Send, DollarSign, Calendar, Search, Menu, Home, Star
 } from 'lucide-react';
 import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
@@ -18,6 +18,7 @@ export default function StudentDashboard() {
   const { isAuthenticated, student, logout, refreshProfile } = useAuth();
 
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Student Dashboard States
   const [activeTab, setActiveTab] = useState('home');
@@ -347,7 +348,7 @@ export default function StudentDashboard() {
       
       {/* Student Header */}
       <header className="header-glass fade-in-up">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', flexWrap: 'wrap', gap: '15px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', gap: '8px' }}>
           
           {/* Logo */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }} onClick={() => { setActiveTab('home'); navigate('/dashboard'); }}>
@@ -393,7 +394,7 @@ export default function StudentDashboard() {
           </nav>
 
           {/* Right Actions */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             
             {/* Points Stat */}
             <div 
@@ -420,7 +421,10 @@ export default function StudentDashboard() {
                   style={{ width: '100%', height: '100%', transform: 'scale(1.6)', transformOrigin: 'center' }}
                 />
               </div>
-              <strong style={{ fontSize: '0.78rem', color: 'var(--text-main)' }}>{student?.totalPoints || 0} نقطة</strong>
+              <strong style={{ fontSize: '0.78rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                {student?.totalPoints || 0}
+                <span className="hide-mobile-text">نقطة</span>
+              </strong>
             </div>
 
             {/* Wallet Balance Stat */}
@@ -448,8 +452,9 @@ export default function StudentDashboard() {
                   style={{ width: '100%', height: '100%' }}
                 />
               </div>
-              <strong style={{ fontSize: '0.78rem', color: 'var(--text-main)' }}>
-                {(student?.balanceCents || walletData.wallet?.balanceCents || 0) / 100} ج.م
+              <strong style={{ fontSize: '0.78rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                {(student?.balanceCents || walletData.wallet?.balanceCents || 0) / 100}
+                <span className="hide-mobile-text">ج.م</span>
               </strong>
             </div>
 
@@ -475,7 +480,7 @@ export default function StudentDashboard() {
             {/* Theme Toggle */}
             <button 
               onClick={toggleTheme} 
-              className="nav-circle-btn"
+              className="nav-circle-btn hide-on-mobile"
             >
               {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
             </button>
@@ -483,7 +488,7 @@ export default function StudentDashboard() {
             {/* Logout */}
             <button 
               onClick={handleLogout} 
-              className="nav-circle-btn" 
+              className="nav-circle-btn hide-on-mobile" 
               style={{ color: 'var(--danger)', background: 'rgba(244, 63, 94, 0.1)', border: 'none' }}
               title="تسجيل الخروج"
             >
@@ -549,7 +554,7 @@ export default function StudentDashboard() {
                     <span className="badge badge-primary" style={{ marginBottom: '12px', padding: '6px 14px', fontSize: '0.8rem', fontWeight: '800' }}>
                       {student?.year || 'طالب منصة إتقان'}
                     </span>
-                    <h3 style={{ fontSize: '2rem', fontWeight: '900', color: 'var(--text-main)', marginBottom: '12px', lineHeight: '1.3' }}>
+                    <h3 className="hero-title-mobile" style={{ fontSize: '2rem', fontWeight: '900', color: 'var(--text-main)', marginBottom: '12px', lineHeight: '1.3' }}>
                       جاهز لقفل الدرجة النهائية في <span style={{ whiteSpace: 'nowrap' }}>التاريخ؟ 🏆</span>
                     </h3>
                     <p style={{ color: 'var(--text-muted)', lineHeight: '1.7', fontSize: '1rem', marginBottom: '20px', fontWeight: '500' }}>
@@ -595,13 +600,15 @@ export default function StudentDashboard() {
                   }}></div>
 
                   {/* Lottie Animation */}
-                  <div style={{ zIndex: 1, flex: '0 0 350px', height: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'visible' }}>
-                    <DotLottieReact
-                      src="https://lottie.host/e1ca5b38-f181-4902-a8c4-084bc314020c/dizQA0Mgob.lottie"
-                      loop
-                      autoplay
-                      style={{ width: '100%', height: '100%', transform: 'scale(1.75)', transformOrigin: 'center', marginTop: '-15px' }}
-                    />
+                  <div className="hero-lottie-wrapper" style={{ zIndex: 1, flex: '0 0 350px', height: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'visible' }}>
+                    <div className="hero-lottie-inner" style={{ width: '100%', height: '100%', transform: 'scale(1.75)', transformOrigin: 'center', marginTop: '-15px' }}>
+                      <DotLottieReact
+                        src="https://lottie.host/e1ca5b38-f181-4902-a8c4-084bc314020c/dizQA0Mgob.lottie"
+                        loop
+                        autoplay
+                        style={{ width: '100%', height: '100%' }}
+                      />
+                    </div>
                   </div>
 
                 </div>
@@ -1514,6 +1521,21 @@ export default function StudentDashboard() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }} className="grid-cards">
                   
+                  {/* Balance Visual */}
+                  <div className="card-clay" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', textAlign: 'center', background: 'linear-gradient(135deg, rgba(6,182,212,0.1) 0%, rgba(59,130,246,0.1) 100%)', padding: '30px' }}>
+                    <div className="flex-center" style={{ width: '70px', height: '70px', borderRadius: '50%', background: 'rgba(59, 130, 246, 0.12)', marginBottom: '20px', overflow: 'hidden' }}>
+                      <DotLottieReact
+                        src="https://lottie.host/d8144e91-07ee-4f95-bf7a-d26cdd9a5255/9EBiPn85qQ.lottie"
+                        loop
+                        autoplay
+                        style={{ width: '100%', height: '100%', transform: 'scale(1.2)' }}
+                      />
+                    </div>
+                    <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem', display: 'block', marginBottom: '5px' }}>رصيدك الحالي بالمحفظة</span>
+                    <strong style={{ fontSize: '2.5rem', color: 'var(--text-main)' }}>{(student?.balanceCents || walletData.wallet?.balanceCents || 0) / 100} <span style={{ fontSize: '1.2rem' }}>جنيه مصري</span></strong>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '10px' }}>يمكنك استخدام الرصيد لشراء المراجعات والمحاضرات فوراً.</span>
+                  </div>
+
                   {/* Voucher Recharge */}
                   <div className="card-clay" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
@@ -1545,21 +1567,6 @@ export default function StudentDashboard() {
                         {!topupLoading && <Send size={18} />}
                       </button>
                     </form>
-                  </div>
-
-                  {/* Balance Visual */}
-                  <div className="card-clay" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', textAlign: 'center', background: 'linear-gradient(135deg, rgba(6,182,212,0.1) 0%, rgba(59,130,246,0.1) 100%)', padding: '30px' }}>
-                    <div className="flex-center" style={{ width: '70px', height: '70px', borderRadius: '50%', background: 'rgba(59, 130, 246, 0.12)', marginBottom: '20px', overflow: 'hidden' }}>
-                      <DotLottieReact
-                        src="https://lottie.host/d8144e91-07ee-4f95-bf7a-d26cdd9a5255/9EBiPn85qQ.lottie"
-                        loop
-                        autoplay
-                        style={{ width: '100%', height: '100%', transform: 'scale(1.2)' }}
-                      />
-                    </div>
-                    <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem', display: 'block', marginBottom: '5px' }}>رصيدك الحالي بالمحفظة</span>
-                    <strong style={{ fontSize: '2.5rem', color: 'var(--text-main)' }}>{(student?.balanceCents || walletData.wallet?.balanceCents || 0) / 100} <span style={{ fontSize: '1.2rem' }}>جنيه مصري</span></strong>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '10px' }}>يمكنك استخدام الرصيد لشراء المراجعات والمحاضرات فوراً.</span>
                   </div>
 
                 </div>
@@ -1617,6 +1624,21 @@ export default function StudentDashboard() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }} className="grid-cards">
                   
+                  {/* Points Balance Visual */}
+                  <div className="card-clay" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', textAlign: 'center', background: 'linear-gradient(135deg, rgba(234, 88, 12, 0.1) 0%, rgba(202, 138, 4, 0.1) 100%)', padding: '30px' }}>
+                    <div className="flex-center" style={{ width: '70px', height: '70px', borderRadius: '50%', background: 'rgba(234, 88, 12, 0.12)', marginBottom: '20px', overflow: 'hidden' }}>
+                      <DotLottieReact
+                        src="https://lottie.host/0dbfca8a-8482-4e7f-bbbc-773183539fd2/FeQ8lECQQc.lottie"
+                        loop
+                        autoplay
+                        style={{ width: '100%', height: '100%', transform: 'scale(1.6)', transformOrigin: 'center' }}
+                      />
+                    </div>
+                    <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem', display: 'block', marginBottom: '5px' }}>رصيدك الإجمالي من النقاط</span>
+                    <strong style={{ fontSize: '2.5rem', color: 'var(--text-main)' }}>{student?.totalPoints || 0} <span style={{ fontSize: '1.2rem' }}>نقطة</span></strong>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '10px' }}>استخدم نقاطك للمنافسة والترتيب والحصول على جوائز!</span>
+                  </div>
+
                   {/* How to Earn Points Guide */}
                   <div className="card-clay" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
@@ -1641,21 +1663,6 @@ export default function StudentDashboard() {
                         <strong style={{ color: 'var(--primary)', fontWeight: '800' }}>+20 نقطة</strong>
                       </div>
                     </div>
-                  </div>
-
-                  {/* Points Balance Visual */}
-                  <div className="card-clay" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', textAlign: 'center', background: 'linear-gradient(135deg, rgba(234, 88, 12, 0.1) 0%, rgba(202, 138, 4, 0.1) 100%)', padding: '30px' }}>
-                    <div className="flex-center" style={{ width: '70px', height: '70px', borderRadius: '50%', background: 'rgba(234, 88, 12, 0.12)', marginBottom: '20px', overflow: 'hidden' }}>
-                      <DotLottieReact
-                        src="https://lottie.host/0dbfca8a-8482-4e7f-bbbc-773183539fd2/FeQ8lECQQc.lottie"
-                        loop
-                        autoplay
-                        style={{ width: '100%', height: '100%', transform: 'scale(1.6)', transformOrigin: 'center' }}
-                      />
-                    </div>
-                    <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem', display: 'block', marginBottom: '5px' }}>رصيدك الإجمالي من النقاط</span>
-                    <strong style={{ fontSize: '2.5rem', color: 'var(--text-main)' }}>{student?.totalPoints || 0} <span style={{ fontSize: '1.2rem' }}>نقطة</span></strong>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '10px' }}>استخدم نقاطك للمنافسة والترتيب والحصول على جوائز!</span>
                   </div>
 
                 </div>
@@ -1721,7 +1728,7 @@ export default function StudentDashboard() {
 
                 {/* Split Card Container */}
                 <div>
-                  <div style={{
+                  <div className="qr-grid-container" style={{
                     display: 'grid',
                     gridTemplateColumns: '1fr 1fr',
                     borderRadius: '28px',
@@ -2089,7 +2096,106 @@ export default function StudentDashboard() {
       </main>
 
       <SimpleFooter />
-      <MobileBottomNav />
+      {/* Custom Dashboard Mobile Bottom Nav */}
+      <div className="mobile-bottom-nav">
+        {[
+          { id: 'home', label: 'الرئيسية', icon: Home },
+          { id: 'lectures', label: 'المحاضرات', icon: Video },
+          { id: 'homework', label: 'الواجبات', icon: BookOpen },
+          { id: 'exams', label: 'الامتحانات', icon: Star }
+        ].map(item => (
+          <button
+            key={item.id}
+            onClick={() => { setActiveTab(item.id); setError(''); setSuccess(''); window.scrollTo(0,0); setMobileMenuOpen(false); }}
+            className={`mobile-nav-item ${activeTab === item.id ? 'active' : ''}`}
+          >
+            <item.icon size={20} />
+            <span>{item.label}</span>
+          </button>
+        ))}
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className={`mobile-nav-item ${mobileMenuOpen ? 'active' : ''}`}
+        >
+          <Menu size={20} />
+          <span>المزيد</span>
+        </button>
+      </div>
+
+      {/* Mobile Menu Overlay */}
+      {mobileMenuOpen && (
+        <div style={{
+          position: 'fixed',
+          bottom: '80px',
+          left: '16px',
+          right: '16px',
+          background: 'var(--bg-surface-glass)',
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
+          border: '2px solid var(--border-color)',
+          borderRadius: '20px',
+          padding: '20px',
+          zIndex: 9998,
+          boxShadow: '0 10px 40px rgba(0,0,0,0.15)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '12px'
+        }}>
+          <button 
+            onClick={() => { setActiveTab('qr'); setMobileMenuOpen(false); window.scrollTo(0,0); }}
+            className="btn-clay"
+            style={{ width: '100%', background: 'var(--bg-main)', color: 'var(--text-main)', border: '1px solid var(--border-color)', justifyContent: 'flex-start', gap: '12px', padding: '12px 20px' }}
+          >
+            <QrCode size={18} />
+            كود الحضور (QR)
+          </button>
+          <button 
+            onClick={() => { toggleTheme(); setMobileMenuOpen(false); }}
+            className="btn-clay"
+            style={{ width: '100%', background: 'var(--bg-main)', color: 'var(--text-main)', border: '1px solid var(--border-color)', justifyContent: 'flex-start', gap: '12px', padding: '12px 20px' }}
+          >
+            {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+            {theme === 'light' ? 'الوضع الليلي' : 'الوضع الفاتح'}
+          </button>
+          <button 
+            onClick={() => { handleLogout(); setMobileMenuOpen(false); }}
+            className="btn-clay"
+            style={{ width: '100%', background: 'rgba(244, 63, 94, 0.1)', color: 'var(--danger)', border: '1px solid rgba(244, 63, 94, 0.2)', justifyContent: 'flex-start', gap: '12px', padding: '12px 20px' }}
+          >
+            <LogOut size={18} />
+            تسجيل الخروج
+          </button>
+
+          <div style={{ height: '1px', background: 'var(--border-color)', margin: '4px 0' }}></div>
+
+          <a 
+            href="https://wa.me/201000000000"
+            target="_blank"
+            rel="noreferrer"
+            className="btn-clay"
+            style={{ width: '100%', background: 'transparent', color: 'var(--text-muted)', border: 'none', justifyContent: 'flex-start', gap: '12px', padding: '8px 20px', fontSize: '0.9rem', textDecoration: 'none' }}
+          >
+            <Send size={16} />
+            تواصل معنا
+          </a>
+          <a 
+            href="/terms"
+            className="btn-clay"
+            style={{ width: '100%', background: 'transparent', color: 'var(--text-muted)', border: 'none', justifyContent: 'flex-start', gap: '12px', padding: '8px 20px', fontSize: '0.9rem', textDecoration: 'none' }}
+          >
+            <FileText size={16} />
+            شروط الاستخدام
+          </a>
+          <a 
+            href="/privacy"
+            className="btn-clay"
+            style={{ width: '100%', background: 'transparent', color: 'var(--text-muted)', border: 'none', justifyContent: 'flex-start', gap: '12px', padding: '8px 20px', fontSize: '0.9rem', textDecoration: 'none' }}
+          >
+            <AlertCircle size={16} />
+            سياسة الخصوصية
+          </a>
+        </div>
+      )}
 
       {/* YouTube Video Modal Player */}
       {activeYtVideoId && (

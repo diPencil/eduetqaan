@@ -55,20 +55,26 @@ export default function Privacy() {
             </nav>
           )}
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             {isAuthenticated ? (
               <>
                 <div className="card-clay" style={{ padding: '4px 10px', display: 'flex', alignItems: 'center', gap: '6px', borderRadius: '12px', background: 'var(--bg-surface)', border: '1px solid var(--border-color)', cursor: 'pointer' }} onClick={() => navigate('/dashboard')}>
                   <div className="flex-center" style={{ width: '22px', height: '22px', borderRadius: '4px', background: 'rgba(16, 185, 129, 0.12)', color: '#10B981' }}><Award size={14} /></div>
-                  <strong style={{ fontSize: '0.78rem', color: 'var(--text-main)' }}>{student?.totalPoints || 0} نقطة</strong>
+                  <strong style={{ fontSize: '0.78rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    {student?.totalPoints || 0}
+                    <span className="hide-mobile-text">نقطة</span>
+                  </strong>
                 </div>
                 <div className="card-clay" style={{ padding: '4px 10px', display: 'flex', alignItems: 'center', gap: '6px', borderRadius: '12px', background: 'var(--bg-surface)', border: '1px solid var(--border-color)', cursor: 'pointer' }} onClick={() => navigate('/dashboard')}>
                   <div className="flex-center" style={{ width: '22px', height: '22px', borderRadius: '4px', background: 'rgba(234, 88, 12, 0.12)', color: 'var(--primary)' }}><Wallet size={14} /></div>
-                  <strong style={{ fontSize: '0.78rem', color: 'var(--text-main)' }}>{student?.walletBalance || 0} ج.م</strong>
+                  <strong style={{ fontSize: '0.78rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    {student?.walletBalance || 0}
+                    <span className="hide-mobile-text">ج.م</span>
+                  </strong>
                 </div>
                 <button onClick={() => navigate('/dashboard')} className="nav-circle-btn" style={{ background: 'var(--bg-surface)' }}><User size={16} /></button>
-                <button onClick={toggleTheme} className="nav-circle-btn" style={{ background: 'var(--bg-surface)' }}>{theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}</button>
-                <button onClick={() => { logout(); navigate('/'); }} className="nav-circle-btn" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#EF4444' }}><LogOut size={16} /></button>
+                <button onClick={toggleTheme} className="nav-circle-btn hide-on-mobile" style={{ background: 'var(--bg-surface)' }}>{theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}</button>
+                <button onClick={() => { logout(); navigate('/'); }} className="nav-circle-btn hide-on-mobile" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#EF4444' }}><LogOut size={16} /></button>
               </>
             ) : (
               <>
